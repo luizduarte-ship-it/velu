@@ -231,14 +231,20 @@ textarea.field{height:auto;min-height:84px;padding:9px 11px;resize:vertical;line
   width:var(--rail);flex:0 0 var(--rail);color:var(--rail-tx);
   background:linear-gradient(178deg,#15171D 0%,var(--rail-bg) 62%,#0F1116 100%);
   display:flex;flex-direction:column;padding:16px 12px 12px;
-  position:sticky;top:0;height:100vh;overflow-y:auto;
+  position:sticky;top:0;height:100vh;overflow:hidden;
   border-right:1px solid var(--rail-line);
-  scrollbar-width:thin;scrollbar-color:#2A2E38 transparent;
 }
-.rail::-webkit-scrollbar{width:6px}
-.rail::-webkit-scrollbar-thumb{background:#2A2E38;border-radius:3px}
-.rail::-webkit-scrollbar-thumb:hover{background:#363B47}
-.rail-top{display:flex;align-items:center;gap:9px;padding:2px 6px 18px}
+.rail-scroll{
+  flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;
+  margin:0 -4px;padding:0 4px 2px;
+  scrollbar-width:thin;scrollbar-color:#2A2E38 transparent;
+  -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+}
+.rail-scroll::-webkit-scrollbar{width:6px}
+.rail-scroll::-webkit-scrollbar-thumb{background:#2A2E38;border-radius:3px}
+.rail-scroll::-webkit-scrollbar-thumb:hover{background:#363B47}
+.rail-top{flex:0 0 auto;display:flex;align-items:center;gap:9px;padding:2px 6px 18px}
+.new-chat{flex:0 0 auto}
 .rail-top .brand-plate{
   display:flex;align-items:center;gap:9px;width:100%;
   background:linear-gradient(135deg,rgba(17,108,254,.10),rgba(17,108,254,.02));
@@ -312,7 +318,7 @@ button.rail-sec:hover .chev{opacity:.9}
 }
 .hist button .i{width:13px;height:13px;opacity:.5;flex:0 0 13px}
 .hist button:hover{background:var(--rail-bg-2);color:var(--rail-tx);padding-left:13px}
-.rail-foot{margin-top:auto;border-top:1px solid var(--rail-line);padding-top:10px}
+.rail-foot{flex:0 0 auto;margin-top:8px;border-top:1px solid var(--rail-line);padding-top:10px}
 .acct{display:flex;align-items:center;gap:10px;width:100%;padding:8px;border-radius:10px;transition:background .2s var(--ease)}
 .acct:hover{background:var(--rail-bg-2)}
 .avatar{
@@ -934,7 +940,7 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
   .shell{flex-direction:column}
   .rail{width:100%;flex:none;height:auto;position:sticky;top:0;z-index:30;flex-direction:row;align-items:center;gap:5px;overflow-x:auto;padding:9px 12px;border-right:none;border-bottom:1px solid var(--rail-line)}
   .rail-top,.rail-sec,.rail-foot,.nav-count,.hist{display:none}
-  .rail-group{display:contents}
+  .rail-scroll,.rail-group{display:contents}
   .nav,.new-chat{width:auto;white-space:nowrap;margin:0;flex:0 0 auto}
   .nav[aria-current="page"]::before{display:none}
   .topbar{padding:0 18px}
@@ -1049,6 +1055,7 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 
     <button class="new-chat" id="new-chat"><svg class="i"><use href="#ic-plus"/></svg> Nova conversa</button>
 
+    <div class="rail-scroll">
     <button class="rail-sec" data-sec="recentes" aria-expanded="true">Recentes<svg class="i chev"><use href="#ic-arrow-r"/></svg></button>
     <div class="rail-group" data-group="recentes">
       <div class="hist" id="hist"></div>
@@ -1075,6 +1082,7 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
       <button class="nav" data-view="decks"><svg class="i"><use href="#ic-deck"/></svg>Apresentações</button>
       <button class="nav" data-view="prompts"><svg class="i"><use href="#ic-book"/></svg>Biblioteca de prompts</button>
       <button class="nav" data-view="proj"><svg class="i"><use href="#ic-folder"/></svg>Projetos<span class="nav-count" id="nc-proj">–</span></button>
+    </div>
     </div>
 
     <div class="rail-foot">
