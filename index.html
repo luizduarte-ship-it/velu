@@ -142,17 +142,17 @@ textarea.field{height:auto;min-height:84px;padding:9px 11px;resize:vertical;line
 .login-art{
   flex:1;padding:52px 56px;display:flex;flex-direction:column;justify-content:space-between;
   position:relative;overflow:hidden;min-width:0;
-  background:radial-gradient(120% 100% at 62% 42%,#12243f 0%,#0c1729 46%,var(--void) 100%);
+  background:radial-gradient(120% 100% at 62% 42%,#0f1e36 0%,#0b1526 46%,var(--void) 100%);
 }
 #net{
-  position:absolute;top:50%;left:58%;transform:translate(-50%,-50%);
-  width:min(118%,940px);aspect-ratio:1;pointer-events:none;
-  -webkit-mask-image:radial-gradient(circle at 50% 50%,#000 40%,transparent 73%);
-  mask-image:radial-gradient(circle at 50% 50%,#000 40%,transparent 73%);
+  position:absolute;top:50%;left:58%;transform:translate(-50%,-50%);z-index:2;
+  width:min(122%,1000px);aspect-ratio:1;pointer-events:none;opacity:.92;
+  -webkit-mask-image:radial-gradient(circle at 50% 50%,#000 46%,transparent 78%);
+  mask-image:radial-gradient(circle at 50% 50%,#000 46%,transparent 78%);
 }
 .login-art::before{
   content:"";position:absolute;top:38%;left:60%;transform:translate(-50%,-50%);
-  width:520px;height:520px;pointer-events:none;z-index:1;
+  width:520px;height:520px;pointer-events:none;z-index:0;
   background:radial-gradient(circle,var(--brand-glow) 0%,transparent 68%);
   filter:blur(8px);animation:auraPulse 7s ease-in-out infinite;
 }
@@ -267,6 +267,23 @@ textarea.field{height:auto;min-height:84px;padding:9px 11px;resize:vertical;line
   font-size:9.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
   color:var(--rail-tx-2);padding:20px 9px 8px;
 }
+button.rail-sec{
+  width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  cursor:pointer;border-radius:8px;
+  transition:color .22s var(--ease),background .22s var(--ease);
+}
+button.rail-sec:hover{color:var(--rail-tx)}
+.rail-sec .chev{
+  width:11px;height:11px;stroke-width:2.2;opacity:.55;flex:0 0 11px;
+  transform:rotate(90deg);transition:transform .34s var(--ease),opacity .2s;
+}
+button.rail-sec:hover .chev{opacity:.9}
+.rail-sec[aria-expanded="false"] .chev{transform:rotate(0deg)}
+.rail-group{
+  overflow:hidden;max-height:900px;
+  transition:max-height .42s var(--ease),opacity .3s var(--ease),transform .42s var(--ease);
+}
+.rail-group.closed{max-height:0;opacity:0;transform:translateY(-4px)}
 .nav{
   position:relative;display:flex;align-items:center;gap:11px;width:100%;
   padding:0 11px;height:38px;border-radius:9px;color:var(--rail-tx-2);font-size:13.5px;font-weight:600;
@@ -498,6 +515,13 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 .lead-sources{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto}
 .lead-sources a{font-size:9.5px;color:var(--tx-3);text-decoration:none;border:1px solid var(--line-2);padding:2px 6px;border-radius:4px}
 .lead-sources a:hover{color:var(--brand-lift);border-color:var(--brand)}
+.lead-kebab{
+  width:30px;height:30px;border-radius:8px;display:inline-grid;place-items:center;
+  color:var(--tx-3);border:1px solid transparent;
+  transition:background .2s var(--ease),color .2s var(--ease),border-color .2s var(--ease),transform .2s var(--ease);
+}
+.lead-kebab:hover{background:var(--panel-2);color:var(--tx);border-color:var(--line-2);transform:translateY(-1px)}
+.lead-kebab .i{width:15px;height:15px}
 @media(max-width:900px){.lead-auto{grid-template-columns:1fr 1fr}.lead-auto-copy{grid-column:1/-1}.lead-options .btn{margin-left:0}}
 
 /* ============================================================ DECKS / PROMPTS / PROJETOS ============================================================ */
@@ -755,14 +779,22 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 
 /* --- popup de contexto --- */
 .pop{
-  position:absolute;background:var(--panel);border:1px solid var(--line-2);border-radius:9px;
-  padding:5px;box-shadow:var(--e3);z-index:50;min-width:180px;font-size:12.5px;
+  position:absolute;background:linear-gradient(180deg,var(--panel-2),var(--panel));
+  border:1px solid var(--line-2);border-radius:11px;
+  padding:6px;box-shadow:var(--e3);z-index:50;min-width:210px;font-size:12.5px;
+  transform-origin:top right;animation:popIn .18s var(--ease);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
 }
-.pop button{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;border-radius:5px;color:var(--tx);font-weight:500;transition:background .1s}
+@keyframes popIn{from{opacity:0;transform:translateY(-6px) scale(.97)}to{opacity:1;transform:none}}
+.pop button{display:flex;align-items:center;gap:10px;width:100%;padding:9px 11px;border-radius:7px;color:var(--tx);font-weight:500;transition:background .16s var(--ease),color .16s var(--ease)}
+.pop button .i{color:var(--tx-3);transition:color .16s var(--ease)}
 .pop button:hover{background:var(--void)}
+.pop button:hover .i{color:var(--brand-lift)}
 .pop button.danger{color:var(--dn)}
+.pop button.danger .i{color:var(--dn)}
 .pop button.danger:hover{background:var(--dn-bg)}
-.pop .sep{height:1px;background:var(--line);margin:4px 2px}
+.pop .sep{height:1px;background:var(--line);margin:5px 3px}
+@media(prefers-reduced-motion:reduce){.pop{animation:none}}
 
 /* --- edição inline --- */
 .edit-in{
@@ -902,6 +934,7 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
   .shell{flex-direction:column}
   .rail{width:100%;flex:none;height:auto;position:sticky;top:0;z-index:30;flex-direction:row;align-items:center;gap:5px;overflow-x:auto;padding:9px 12px;border-right:none;border-bottom:1px solid var(--rail-line)}
   .rail-top,.rail-sec,.rail-foot,.nav-count,.hist{display:none}
+  .rail-group{display:contents}
   .nav,.new-chat{width:auto;white-space:nowrap;margin:0;flex:0 0 auto}
   .nav[aria-current="page"]::before{display:none}
   .topbar{padding:0 18px}
@@ -1016,25 +1049,33 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 
     <button class="new-chat" id="new-chat"><svg class="i"><use href="#ic-plus"/></svg> Nova conversa</button>
 
-    <div class="rail-sec">Recentes</div>
-    <div class="hist" id="hist"></div>
+    <button class="rail-sec" data-sec="recentes" aria-expanded="true">Recentes<svg class="i chev"><use href="#ic-arrow-r"/></svg></button>
+    <div class="rail-group" data-group="recentes">
+      <div class="hist" id="hist"></div>
+    </div>
 
-    <div class="rail-sec">Comercial</div>
-    <button class="nav" data-view="comp" aria-current="page"><svg class="i"><use href="#ic-radar"/></svg>Concorrentes<span class="nav-count" id="nc-rivals">–</span></button>
-    <button class="nav" data-view="leads"><svg class="i"><use href="#ic-target"/></svg>Leads<span class="nav-count" id="nc-leads">–</span></button>
-    <button class="nav" data-view="pipe"><svg class="i"><use href="#ic-board"/></svg>Pipeline<span class="nav-count" id="nc-pipe">–</span></button>
-    <button class="nav" data-view="dispatch"><svg class="i"><use href="#ic-send"/></svg>Agente de disparo</button>
+    <button class="rail-sec" data-sec="comercial" aria-expanded="true">Comercial<svg class="i chev"><use href="#ic-arrow-r"/></svg></button>
+    <div class="rail-group" data-group="comercial">
+      <button class="nav" data-view="comp" aria-current="page"><svg class="i"><use href="#ic-radar"/></svg>Concorrentes<span class="nav-count" id="nc-rivals">–</span></button>
+      <button class="nav" data-view="leads"><svg class="i"><use href="#ic-target"/></svg>Leads<span class="nav-count" id="nc-leads">–</span></button>
+      <button class="nav" data-view="pipe"><svg class="i"><use href="#ic-board"/></svg>Pipeline<span class="nav-count" id="nc-pipe">–</span></button>
+      <button class="nav" data-view="dispatch"><svg class="i"><use href="#ic-send"/></svg>Agente de disparo</button>
+    </div>
 
-    <div class="rail-sec">Estúdio</div>
-    <button class="nav" data-view="code"><svg class="i"><use href="#ic-code"/></svg>Velu Code</button>
-    <button class="nav" data-view="image"><svg class="i"><use href="#ic-image"/></svg>Criador de imagem</button>
-    <button class="nav" data-view="skills"><svg class="i"><use href="#ic-plug"/></svg>Skills<span class="nav-count" id="nc-skills">–</span></button>
+    <button class="rail-sec" data-sec="estudio" aria-expanded="true">Estúdio<svg class="i chev"><use href="#ic-arrow-r"/></svg></button>
+    <div class="rail-group" data-group="estudio">
+      <button class="nav" data-view="code"><svg class="i"><use href="#ic-code"/></svg>Velu Code</button>
+      <button class="nav" data-view="image"><svg class="i"><use href="#ic-image"/></svg>Criador de imagem</button>
+      <button class="nav" data-view="skills"><svg class="i"><use href="#ic-plug"/></svg>Skills<span class="nav-count" id="nc-skills">–</span></button>
+    </div>
 
-    <div class="rail-sec">Criação</div>
-    <button class="nav" data-view="video"><svg class="i"><use href="#ic-video"/></svg>Velu Vídeo</button>
-    <button class="nav" data-view="decks"><svg class="i"><use href="#ic-deck"/></svg>Apresentações</button>
-    <button class="nav" data-view="prompts"><svg class="i"><use href="#ic-book"/></svg>Biblioteca de prompts</button>
-    <button class="nav" data-view="proj"><svg class="i"><use href="#ic-folder"/></svg>Projetos<span class="nav-count" id="nc-proj">–</span></button>
+    <button class="rail-sec" data-sec="criacao" aria-expanded="true">Criação<svg class="i chev"><use href="#ic-arrow-r"/></svg></button>
+    <div class="rail-group" data-group="criacao">
+      <button class="nav" data-view="video"><svg class="i"><use href="#ic-video"/></svg>Velu Vídeo</button>
+      <button class="nav" data-view="decks"><svg class="i"><use href="#ic-deck"/></svg>Apresentações</button>
+      <button class="nav" data-view="prompts"><svg class="i"><use href="#ic-book"/></svg>Biblioteca de prompts</button>
+      <button class="nav" data-view="proj"><svg class="i"><use href="#ic-folder"/></svg>Projetos<span class="nav-count" id="nc-proj">–</span></button>
+    </div>
 
     <div class="rail-foot">
       <button class="acct" data-view="set">
@@ -2161,6 +2202,25 @@ document.addEventListener('click', e => {
 });
 $('#back').addEventListener('click', () => go('comp'));
 
+/* ---- gavetas da barra lateral: cada categoria abre e fecha ---- */
+(function initRailSections(){
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem('velu-rail-sections') || '{}'); }catch{}
+  document.querySelectorAll('button.rail-sec').forEach(sec => {
+    const key = sec.dataset.sec;
+    const group = document.querySelector(`.rail-group[data-group="${key}"]`);
+    if(!group) return;
+    if(saved[key] === false){ sec.setAttribute('aria-expanded','false'); group.classList.add('closed'); }
+    sec.addEventListener('click', () => {
+      const open = sec.getAttribute('aria-expanded') !== 'false';
+      sec.setAttribute('aria-expanded', String(!open));
+      group.classList.toggle('closed', open);
+      saved[key] = !open;
+      try{ localStorage.setItem('velu-rail-sections', JSON.stringify(saved)); }catch{}
+    });
+  });
+})();
+
 /* ============================================================ AGENTE DE DISPARO ============================================================ */
 (function initDispatch(){
   const LIST_SIZES = { 'leads-todos':0, 'leads-tel':0, 'leads-email':0 };
@@ -2501,15 +2561,64 @@ function paintLeads(niche){
       <div><div class="tr-name">${esc(l.name)}</div><div class="tr-meta">${esc([l.city&&l.state?l.city+' · '+l.state:l.city||l.state,l.cnpj?'CNPJ '+l.cnpj:null,l.company_size].filter(Boolean).join(' · ') || l.meta || '')}</div></div>
       <div class="lead-contact">${l.phone?`<a href="tel:${esc(String(l.phone).replace(/[^+\d]/g,''))}">${esc(l.phone)}</a>`:'<span>telefone não confirmado</span>'}${l.email?`<a href="mailto:${esc(l.email)}">${esc(l.email)}</a>`:'<span>e-mail não confirmado</span>'}</div>
       <div><span class="num" style="font-size:13px">${Number(l.score)||0}</span><div class="spark"><span style="width:${Number(l.score)||0}%"></span></div></div>
-      <div style="text-align:right"><button class="btn btn-ghost btn-sm" data-lead="${l.id}">Abrir</button></div>
+      <div style="text-align:right"><button class="lead-kebab" data-lead-menu="${l.id}" title="Ações do lead" aria-label="Ações do lead">${ico('more','i i-sm')}</button></div>
     </div>
     <div class="tr-fit">${ico('dot','i')}<span>${esc([l.evidence_level,l.purchase_signal||l.need_note,l.fit_note].filter(Boolean).join(' · '))}</span><span class="lead-sources">${(Array.isArray(l.source_urls)?l.source_urls:[]).slice(0,4).map((s,i)=>{const href=safeHref(typeof s==='string'?s:s?.url);return href?`<a href="${esc(href)}" target="_blank" rel="noopener noreferrer">fonte ${i+1}</a>`:''}).join('')}</span></div>
     ${l.campaign_hook?`<div class="tr-hook"><svg class="i i-sm"><use href="#ic-send"/></svg><span><b>Gancho:</b> ${esc(l.campaign_hook)}</span></div>`:''}`).join('');
 
-  document.querySelectorAll('[data-lead]').forEach(b => b.addEventListener('click', () => {
-    const l = S.leads.find(x => x.id === b.dataset.lead);
-    ask(`Me prepare para falar com a ${l.name}. CNPJ: ${l.cnpj||'não confirmado'}. Local: ${[l.city,l.state].filter(Boolean).join('/')||l.region||'não confirmado'}. Contato público: ${[l.phone,l.email,l.website].filter(Boolean).join(' · ')||'não confirmado'}. Evidência: ${l.purchase_signal||l.evidence_level||'frota provável'}. Necessidade provável: ${l.need_note||l.fit_note||'analisar'}. Gancho de abordagem sugerido: ${l.campaign_hook||'proponha um'}. Está na etapa ${l.stage} do pipeline. Diferencie fatos de hipóteses e use as fontes cadastradas.`);
-  }));
+  document.querySelectorAll('[data-lead-menu]').forEach(m =>
+    m.addEventListener('click', e => { e.stopPropagation(); openLeadMenu(m); }));
+}
+
+function leadPrep(l){
+  ask(`Me prepare para falar com a ${l.name}. CNPJ: ${l.cnpj||'não confirmado'}. Local: ${[l.city,l.state].filter(Boolean).join('/')||l.region||'não confirmado'}. Contato público: ${[l.phone,l.email,l.website].filter(Boolean).join(' · ')||'não confirmado'}. Evidência: ${l.purchase_signal||l.evidence_level||'frota provável'}. Necessidade provável: ${l.need_note||l.fit_note||'analisar'}. Gancho de abordagem sugerido: ${l.campaign_hook||'proponha um'}. Está na etapa ${l.stage} do pipeline. Diferencie fatos de hipóteses e use as fontes cadastradas.`);
+}
+
+function openLeadMenu(anchor){
+  closePop();
+  const l = S.leads.find(x => x.id === anchor.dataset.leadMenu);
+  if(!l) return;
+  const rect = anchor.getBoundingClientRect();
+  const pop = document.createElement('div');
+  pop.className = 'pop';
+  pop.style.top = (rect.bottom + 6) + 'px';
+  pop.style.left = Math.min(rect.right - 210, window.innerWidth - 224) + 'px';
+  pop.innerHTML = `
+    <button data-act="prep">${ico('sparkles','i i-sm')}Abrir preparação</button>
+    <div class="sep"></div>
+    <button data-act="pipe">${ico('board','i i-sm')}Enviar para o Pipeline</button>
+    <button data-act="dispatch">${ico('send','i i-sm')}Enviar para o Agente de disparo</button>
+  `;
+  document.body.appendChild(pop);
+  S.pop = pop;
+  pop.querySelectorAll('[data-act]').forEach(b =>
+    b.addEventListener('click', () => { closePop(); leadAction(l, b.dataset.act); }));
+  setTimeout(() => document.addEventListener('click', closePop, { once:true }), 0);
+}
+
+async function leadAction(l, act){
+  if(act === 'prep') return leadPrep(l);
+  if(act === 'pipe'){
+    if(l.stage === 'fechado' || l.stage === 'perdido'){
+      const prev = l.stage;
+      l.stage = 'contato'; l.stage_since = new Date().toISOString();
+      const { error } = await SB.from('leads').update({ stage:'contato', stage_since:l.stage_since }).eq('id', l.id);
+      if(error){ l.stage = prev; return toast(error.message, true); }
+    }else if(l.stage === 'novo'){
+      l.stage = 'contato'; l.stage_since = new Date().toISOString();
+      const { error } = await SB.from('leads').update({ stage:'contato', stage_since:l.stage_since }).eq('id', l.id);
+      if(error){ l.stage = 'novo'; return toast(error.message, true); }
+    }
+    paintBoard(); pipeCounts();
+    return toast(`${l.name} no Pipeline, em Contato.`);
+  }
+  if(act === 'dispatch'){
+    go('dispatch');
+    const list = $('#disp-list'); if(list){ list.value = 'leads-todos'; list.dispatchEvent(new Event('change')); }
+    const body = $('#disp-body');
+    if(body && !body.value.trim() && l.campaign_hook) body.value = l.campaign_hook;
+    toast(`${l.name} no Agente de disparo. Escreva a mensagem e agende.`);
+  }
 }
 /* ---------- buscador de leads: sai coletando de verdade ---------- */
 const LEAD_FN = 'https://hjtdkfrlogktvmkeauwf.supabase.co/functions/v1/find-leads';
