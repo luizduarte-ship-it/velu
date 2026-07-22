@@ -142,6 +142,7 @@ textarea.field{height:auto;min-height:84px;padding:9px 11px;resize:vertical;line
 .login-art{
   flex:1;padding:52px 56px;display:flex;flex-direction:column;justify-content:space-between;
   position:relative;overflow:hidden;min-width:0;
+  background:radial-gradient(120% 100% at 62% 42%,#12243f 0%,#0c1729 46%,var(--void) 100%);
 }
 #net{
   position:absolute;top:50%;left:58%;transform:translate(-50%,-50%);
@@ -149,12 +150,22 @@ textarea.field{height:auto;min-height:84px;padding:9px 11px;resize:vertical;line
   -webkit-mask-image:radial-gradient(circle at 50% 50%,#000 40%,transparent 73%);
   mask-image:radial-gradient(circle at 50% 50%,#000 40%,transparent 73%);
 }
-.login-art::after{
-  content:"";position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(100deg,var(--void) 12%,rgba(11,21,36,.74) 45%,transparent 84%);
+.login-art::before{
+  content:"";position:absolute;top:38%;left:60%;transform:translate(-50%,-50%);
+  width:520px;height:520px;pointer-events:none;z-index:1;
+  background:radial-gradient(circle,var(--brand-glow) 0%,transparent 68%);
+  filter:blur(8px);animation:auraPulse 7s ease-in-out infinite;
 }
-.login-art>*{position:relative;z-index:2}
-.login-art h2{font-size:clamp(29px,3.9vw,46px);color:#fff;max-width:13ch}
+@keyframes auraPulse{0%,100%{opacity:.5;transform:translate(-50%,-50%) scale(.96)}50%{opacity:.85;transform:translate(-50%,-50%) scale(1.06)}}
+.login-art::after{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:1;
+  background:linear-gradient(100deg,var(--void) 10%,rgba(11,21,36,.7) 44%,transparent 86%);
+}
+.login-art>*{position:relative;z-index:2;animation:loginUp .7s var(--ease) both}
+.login-art>*:nth-child(2){animation-delay:.08s}
+.login-art>*:nth-child(3){animation-delay:.16s}
+@keyframes loginUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.login-art h2{font-size:clamp(29px,3.9vw,46px);color:#fff;max-width:13ch;text-shadow:0 2px 30px rgba(11,21,36,.6)}
 .login-art .lead{color:var(--tx-2);max-width:41ch;margin-top:18px;font-size:14px}
 .login-tick{
   margin-top:40px;display:inline-flex;align-items:center;gap:9px;
@@ -170,11 +181,26 @@ textarea.field{height:auto;min-height:84px;padding:9px 11px;resize:vertical;line
   100%{box-shadow:0 0 0 0 rgba(17,108,254,0)}
 }
 .login-form{
-  flex:0 0 452px;background:var(--bg);padding:56px 52px;
+  flex:0 0 452px;padding:56px 52px;
+  background:linear-gradient(180deg,var(--bg-2) 0%,var(--bg) 60%);
   display:flex;flex-direction:column;justify-content:center;
   border-left:1px solid var(--line);
 }
-.login-form h1{font-size:26px;font-weight:700;letter-spacing:-.028em;margin-bottom:5px}
+.login-form>*{animation:loginUp .6s var(--ease) both}
+.login-form>*:nth-child(1){animation-delay:.10s}
+.login-form>*:nth-child(2){animation-delay:.16s}
+.login-form>*:nth-child(3){animation-delay:.22s}
+.login-form>*:nth-child(4){animation-delay:.26s}
+.login-form>*:nth-child(5){animation-delay:.30s}
+.login-form>*:nth-child(6){animation-delay:.34s}
+.login-form>*:nth-child(7){animation-delay:.38s}
+.login-form>*:nth-child(8){animation-delay:.42s}
+.login-form>*:nth-child(9){animation-delay:.46s}
+.login-form h1{font-size:27px;font-weight:700;letter-spacing:-.028em;margin-bottom:5px}
+.login-form .field{height:44px;border-radius:9px;background:var(--void);transition:border-color .22s var(--ease),box-shadow .22s var(--ease),background .22s var(--ease)}
+.login-form .field:focus{background:#0d1a2e;box-shadow:0 0 0 3px var(--brand-glow),0 4px 16px rgba(5,10,20,.4)}
+.login-form #enter{border-radius:9px;letter-spacing:.01em}
+@media(prefers-reduced-motion:reduce){.login-art>*,.login-form>*{animation:none}.login-art::before{animation:none}}
 .remember{display:flex;align-items:center;gap:9px;margin-top:16px;font-size:12.5px;color:var(--tx-2);font-weight:500;cursor:pointer;user-select:none}
 .remember input{width:15px;height:15px;accent-color:var(--brand);cursor:pointer}
 .login-err{
