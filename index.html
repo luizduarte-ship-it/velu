@@ -541,6 +541,13 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 }
 .lead-kebab:hover{background:var(--panel-2);color:var(--tx);border-color:var(--line-2);transform:translateY(-1px)}
 .lead-kebab .i{width:15px;height:15px}
+.lead-goal{display:inline-flex;align-items:center;gap:10px;font-size:11.5px;color:var(--tx-2);font-weight:600}
+.lead-goal input[type="range"]{width:150px;accent-color:var(--brand);cursor:pointer}
+.lead-progress{display:none;align-items:center;gap:12px;margin-top:14px;padding-top:13px;border-top:1px solid var(--line);flex-wrap:wrap}
+.lead-progress.on{display:flex}
+.lead-progress .u-bar{flex:0 0 220px;max-width:100%;height:8px;background:var(--void);border:1px solid var(--line);border-radius:100px;overflow:hidden}
+.lead-progress .u-bar>span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--brand-lift));transition:width .4s var(--ease)}
+.lead-progress b{color:var(--tx);font-size:12.5px}
 @media(max-width:900px){.lead-auto{grid-template-columns:1fr 1fr}.lead-auto-copy{grid-column:1/-1}.lead-options .btn{margin-left:0}}
 
 /* ============================================================ DECKS / PROMPTS / PROJETOS ============================================================ */
@@ -1221,7 +1228,7 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
         <div class="page-hd">
           <span class="eyebrow">Inteligência</span>
           <h1>Geração de leads</h1>
-          <p class="lead">Prospecção nacional sem Apify. Diga um nicho ou só a intenção ("empresas que precisam de automação", "empresas perdendo espaço no mercado") e a Velu interpreta, procura empresas reais com sinal público dessa necessidade e devolve cada uma com contato, fontes e um gancho de abordagem pronto.</p>
+          <p class="lead">Prospecção pela base pública de CNPJ da Receita Federal. Diga o nicho e a região, defina a meta e a Velu vai puxando empresas reais e ativas, com CNPJ, endereço, telefone, e-mail e o sócio/decisor, aparecendo ao vivo aqui embaixo. Você pode abortar a qualquer momento.</p>
         </div>
         <div class="usage" id="usage-leads"></div>
         <div class="lead-search-card">
@@ -1246,13 +1253,24 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
           </div>
           <div class="attach-tray" id="lead-pending-files" aria-live="polite"></div>
           <div class="lead-options">
-            <label class="lead-check"><input type="checkbox" id="lead-phone" checked> exigir telefone público</label>
-            <label class="lead-check"><input type="checkbox" id="lead-email"> exigir e-mail público</label>
-            <label class="lead-check">por rodada <select class="field" id="lead-target" style="width:76px;min-width:0;height:32px"><option value="8">8</option><option value="12" selected>12</option><option value="20">20</option></select></label>
+            <label class="lead-goal">meta
+              <input type="range" id="lead-goal" min="100" max="400" step="10" value="200">
+              <b id="lead-goal-val" class="num" style="color:var(--tx);min-width:30px;text-align:right">200</b>
+            </label>
+            <button class="btn btn-ghost btn-sm" id="lead-recommend"><svg class="i i-sm"><use href="#ic-sparkles"/></svg>Recomendar</button>
+            <span id="lead-reco-note" style="font-size:11px;color:var(--tx-3);flex:1;min-width:100px;line-height:1.4"></span>
             <input type="file" id="lead-file-in" hidden multiple accept=".pdf,.docx,.xlsx,.xls,.csv,.txt,.md,.json,.html,.xml,.rtf,.pptx">
-            <button class="btn btn-ghost" id="lead-attach"><svg class="i i-sm"><use href="#ic-clip"/></svg>Anexar briefing</button>
             <button class="btn btn-ghost" id="lead-export">Exportar CSV</button>
-            <button class="btn" id="search">Gerar leads agora · 1 clique</button>
+            <button class="btn" id="search"><svg class="i i-sm"><use href="#ic-target"/></svg>Buscar leads ao vivo</button>
+            <input type="checkbox" id="lead-phone" checked hidden>
+            <input type="checkbox" id="lead-email" hidden>
+            <input type="hidden" id="lead-target" value="12">
+          </div>
+          <div class="lead-progress" id="lead-progress">
+            <div class="u-bar"><span id="lead-progress-bar"></span></div>
+            <b id="lead-progress-txt" class="num">0 / 0</b>
+            <span id="lead-progress-label" style="font-size:11.5px;color:var(--tx-3);flex:1;min-width:80px"></span>
+            <button class="btn btn-ghost btn-sm" id="lead-abort"><svg class="i i-sm"><use href="#ic-x"/></svg>Abortar</button>
           </div>
           <div class="lead-auto">
             <div class="lead-auto-copy"><b>Busca automática nacional</b><span>Quando ligada, percorre os estados em rodízio e acumula leads sem repetir.</span></div>
@@ -2734,79 +2752,88 @@ async function saveLeadAutomation(){
   S.leadAutomations=data?[data]:[]; paintLeadAutomation(); toast(enabled?'Automação ativada.':'Automação pausada.');
 }
 
+/* estados a enviar ao backend: BR = sem filtro (nacional) */
+function leadStatesToSend(){ const scope=$('#lead-scope').value; return scope==='BR'?[]:leadStatesFor(scope); }
+function leadSession(){ return SB.auth.getSession().then(r=>r.data.session); }
+function callLeadFn(session, body){
+  return fetch(LEAD_FN,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},body:JSON.stringify(body)}).then(r=>r.json());
+}
+
+let leadAbort = false;
+
+/* recomenda a meta pela contagem real de empresas do nicho */
+async function recommendLeads(){
+  const niche = $('#niche').value.trim();
+  if(!niche) return toast('Diga o nicho primeiro.', true);
+  const note = $('#lead-reco-note'), btn = $('#lead-recommend');
+  btn.disabled = true; note.textContent = 'consultando o mercado…';
+  try{
+    const session = await leadSession();
+    if(!session) throw new Error('Sessão expirada.');
+    const out = await callLeadFn(session,{ recommend:true, niche, region:$('#uf').value.trim()||leadScopeLabel(), scope:$('#lead-scope').value, states:leadStatesToSend() });
+    if(out.error && !out.recommended) throw new Error(out.error);
+    const rec = Math.max(100, Math.min(400, Math.round((out.recommended||200)/10)*10));
+    $('#lead-goal').value = rec; $('#lead-goal-val').textContent = rec;
+    note.textContent = out.reason || '';
+  }catch(e){ note.textContent = 'não consegui recomendar agora.'; }
+  finally{ btn.disabled = false; }
+}
+
+/* busca em lotes: leads entram ao vivo até a meta ou até abortar */
 async function findLeads(){
   const niche = $('#niche').value.trim();
-  const region = $('#uf').value.trim(), scope=$('#lead-scope').value, coverage=leadScopeLabel();
   if(!niche) return toast('Diga o nicho.', true);
-  const pending=[...S.areaFiles.leads];clearAreaFiles('leads');
-  const btn = $('#search');
-  const original = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = `<span class="dots"><i></i><i></i><i></i></span>Gerando leads…`;
-  $('#leads-table').innerHTML = `<div class="empty" style="padding:44px 20px">
-    <div style="display:inline-flex;align-items:center;gap:10px;color:var(--tx-2)">
-      <span class="dots"><i></i><i></i><i></i></span>
-      Buscando empresas do nicho "${esc(niche)}" em ${esc(region||coverage)}…
-    </div>
-    <p style="font-size:11.5px;color:var(--tx-4);margin-top:10px">Receita/CNPJ, PNCP, sites e contatos públicos · sem Apify. Pode levar alguns minutos.</p>
-  </div>`;
-  let uploaded=[];
+  const scope = $('#lead-scope').value;
+  const region = $('#uf').value.trim() || leadScopeLabel();
+  const states = leadStatesToSend();
+  const target = Number($('#lead-goal').value) || 200;
+
+  const btn = $('#search'), original = btn.innerHTML;
+  const prog = $('#lead-progress'), bar = $('#lead-progress-bar'), ptxt = $('#lead-progress-txt'), plabel = $('#lead-progress-label');
+  leadAbort = false;
+  btn.disabled = true; btn.innerHTML = `<span class="dots"><i></i><i></i><i></i></span>Buscando…`;
+  prog.classList.add('on'); bar.style.width='0%'; ptxt.textContent = `0 / ${target}`; plabel.textContent = 'iniciando…';
+
+  const session = await leadSession();
+  if(!session){ toast('Sua sessão expirou. Entre novamente.', true); btn.disabled=false; btn.innerHTML=original; prog.classList.remove('on'); return; }
+
+  let runId = null, total = 0, fails = 0;
   try{
-    uploaded=await uploadTemporaryFiles(pending,file=>{btn.innerHTML=`<span class="dots"><i></i><i></i><i></i></span>Lendo ${esc(file.name.slice(0,20))}…`;});
-    const { data:{ session } } = await SB.auth.getSession();
-    if(!session) throw new Error('Sua sessão expirou. Entre novamente.');
-    const res = await fetch(LEAD_FN, {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization':`Bearer ${session.access_token}` },
-      body: JSON.stringify({niche,region,scope,target:Number($('#lead-target').value),require_phone:$('#lead-phone').checked,require_email:$('#lead-email').checked,file_ids:uploaded.map(f=>f.id)})
-    });
-    const out = await res.json();
-    if(!res.ok) throw new Error(out.error ?? `Erro ${res.status}`);
-
-    /* a busca agora roda em segundo plano no servidor – a resposta acima só
-       confirma que começou. Fica esperando o lead_runs virar completed/failed. */
-    const runId = out.run_id;
-    loadUsage();
-    let finalRun = null;
-    if(runId){
-      const started = Date.now();
-      while(Date.now() - started < 180000){ // até 3 minutos
-        const { data: run } = await SB.from('lead_runs').select('*').eq('id', runId).maybeSingle();
-        if(run && (run.status === 'completed' || run.status === 'failed')){ finalRun = run; break; }
-        const elapsed = Math.round((Date.now() - started) / 1000);
-        btn.innerHTML = `<span class="dots"><i></i><i></i><i></i></span>Pesquisando… ${elapsed}s`;
-        await new Promise(r => setTimeout(r, 3000));
-      }
-      if(!finalRun) throw new Error('A busca está demorando mais que o esperado. Ela continua rodando, confira em alguns minutos, os leads aparecem sozinhos na lista.');
-      if(finalRun.status === 'failed') throw new Error(finalRun.error || 'A busca falhou.');
-    }
-
-    /* recarrega leads do banco */
-    const [{data},{data:runs}]=await Promise.all([
-      SB.from('leads').select('*').order('score',{ascending:false}),
-      SB.from('lead_runs').select('*').order('created_at',{ascending:false}).limit(10)
-    ]);
-    S.leads=data??[]; S.leadRuns=runs??[];
-    S.niches = [...new Set(S.leads.map(l => l.niche).filter(Boolean))];
-    paintNiches();
+    S.leads = S.leads.filter(l => l.niche !== niche); // recomeça este nicho na tela
     paintLeads(niche);
-    paintLeadAutomation();
-    paintIdentity();
-    if(finalRun?.inserted_count || finalRun?.updated_count){
-      toast(`${finalRun.inserted_count||0} novos e ${finalRun.updated_count||0} atualizados em "${niche}".`);
-    }else{
-      toast('Busca concluída, mas nenhum contato atendeu a todos os filtros. Tente outro estado ou desmarque uma exigência.',true);
+    while(!leadAbort){
+      const out = await callLeadFn(session, runId ? { run_id: runId } : { niche, region, scope, states, target });
+      if(out.error && !out.batch_failed) throw new Error(out.error);
+      runId = out.run_id || runId;
+      if(out.batch_failed){ if(++fails >= 2) throw new Error(out.error || 'Falha na busca.'); continue; }
+      fails = 0;
+      const arr = Array.isArray(out.new_leads) ? out.new_leads : [];
+      if(arr.length){ S.leads = [...arr, ...S.leads]; paintLeads(niche); }
+      total = out.total_inserted || total;
+      const pct = Math.min(100, Math.round(total / target * 100));
+      bar.style.width = pct + '%'; ptxt.textContent = `${total} / ${target}`;
+      plabel.textContent = 'buscando mais…';
+      if(out.done){ plabel.textContent = (out.exhausted && total < target) ? 'acabaram as empresas desse filtro.' : 'concluído.'; break; }
     }
+    if(leadAbort){
+      if(runId) await SB.from('lead_runs').update({ status:'aborted', current_step:'abortado', finished_at:new Date().toISOString() }).eq('id', runId);
+      plabel.textContent = 'interrompido por você.';
+    }
+    loadUsage();
+    S.niches = [...new Set(S.leads.map(l => l.niche).filter(Boolean))];
+    paintNiches(); paintLeadAutomation(); paintIdentity();
+    toast(leadAbort ? `Busca interrompida com ${total} leads.` : `${total} leads de "${niche}".`);
   }catch(e){
-    $('#leads-table').innerHTML = `<div class="empty" style="color:var(--dn)">${esc(e.message)}</div>`;
-    toast(e.message, true);
+    plabel.textContent = e.message; toast(e.message, true);
   }finally{
-    await cleanupTemporaryFiles(uploaded);
     btn.disabled = false; btn.innerHTML = original;
   }
 }
 
 $('#search').addEventListener('click', findLeads);
+$('#lead-recommend').addEventListener('click', recommendLeads);
+$('#lead-abort').addEventListener('click', () => { leadAbort = true; $('#lead-progress-label').textContent = 'parando…'; });
+$('#lead-goal').addEventListener('input', e => $('#lead-goal-val').textContent = e.target.value);
 $('#lead-export').addEventListener('click',exportLeadsCsv);
 $('#lead-auto-save').addEventListener('click',saveLeadAutomation);
 $('#niche').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();findLeads();}});
