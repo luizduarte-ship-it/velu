@@ -2642,6 +2642,7 @@ function openLeadMenu(anchor){
   pop.style.left = Math.min(rect.right - 210, window.innerWidth - 224) + 'px';
   pop.innerHTML = `
     <button data-act="prep">${ico('sparkles','i i-sm')}Abrir preparação</button>
+    <button data-act="price">${ico('briefcase','i i-sm')}Sugerir valor e desconto</button>
     <div class="sep"></div>
     <button data-act="pipe">${ico('board','i i-sm')}Enviar para o Pipeline</button>
     <button data-act="dispatch">${ico('send','i i-sm')}Enviar para o Agente de disparo</button>
@@ -2672,6 +2673,53 @@ async function leadAction(l, act){
     const body = $('#disp-body');
     if(body && !body.value.trim() && l.campaign_hook) body.value = l.campaign_hook;
     toast(`${l.name} no Agente de disparo. Escreva a mensagem e agende.`);
+  }
+  if(act === 'price') return suggestPrice(l);
+}
+
+/* ---- modal simples ---- */
+function openModal(title, cap, bodyHtml){
+  closeModal();
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg';
+  bg.innerHTML = `<div class="modal"><div class="modal-hd"><div><h2>${esc(title)}</h2>${cap?`<p class="cap">${esc(cap)}</p>`:''}</div><button class="modal-close" aria-label="Fechar">${ico('x','i i-sm')}</button></div><div class="modal-bd" id="modal-body">${bodyHtml}</div></div>`;
+  document.body.appendChild(bg); S.modal = bg;
+  bg.addEventListener('click', e => { if(e.target === bg) closeModal(); });
+  bg.querySelector('.modal-close').addEventListener('click', closeModal);
+  return bg;
+}
+function closeModal(){ if(S.modal){ S.modal.remove(); S.modal = null; } }
+const brlRange = (a,b) => (a==b||!b) ? brl(a) : `${brl(a)} a ${brl(b)}`;
+
+/* ---- sugestão de valor e desconto por lead (IA sob demanda) ---- */
+const PRICE_FN = 'https://hjtdkfrlogktvmkeauwf.supabase.co/functions/v1/price-suggest';
+async function suggestPrice(l){
+  openModal('Valor e desconto sugeridos', l.name, `<div style="display:flex;align-items:center;gap:10px;color:var(--tx-2);font-size:13px;padding:8px 0"><span class="dots"><i></i><i></i><i></i></span> A Velu está calculando com base no porte e no seu posicionamento…</div>`);
+  try{
+    const { data:{ session } } = await SB.auth.getSession();
+    if(!session) throw new Error('Sessão expirada.');
+    const out = await fetch(PRICE_FN, { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization':`Bearer ${session.access_token}` }, body: JSON.stringify({ lead_id: l.id }) }).then(r=>r.json());
+    if(out.error) throw new Error(out.error);
+    const s = out.suggestion || {};
+    const tk = s.ticket || {};
+    const disc = Array.isArray(s.discounts) ? s.discounts.filter(d=>d && (d.percent||d.note)) : [];
+    const body = `
+      <div style="border:1px solid var(--brand-line);background:var(--brand-bg);border-radius:10px;padding:16px 18px;margin-bottom:14px">
+        <div class="eyebrow" style="color:var(--brand-lift);margin-bottom:6px">Ticket mensal sugerido</div>
+        <div class="num" style="font-size:26px;font-weight:700;letter-spacing:-.02em;color:#fff">${brlRange(Number(tk.min)||0, Number(tk.max)||0)}<span style="font-size:13px;color:var(--tx-3);font-weight:500"> / mês</span></div>
+        ${s.setup?`<div style="font-size:12px;color:var(--tx-2);margin-top:6px">Setup/implantação sugerido: <b>${brl(Number(s.setup))}</b></div>`:''}
+      </div>
+      ${s.rationale?`<p style="font-size:12.5px;color:var(--tx-2);line-height:1.6;margin-bottom:14px">${esc(s.rationale)}</p>`:''}
+      ${disc.length?`<div class="eyebrow" style="margin-bottom:8px">Descontos possíveis</div><div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">${disc.map(d=>`
+        <div style="display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:8px;padding:9px 12px">
+          <b class="num" style="color:var(--up);font-size:14px;min-width:44px">${Number(d.percent)||0}%</b>
+          <div><div style="font-size:12.5px;font-weight:600">${esc(d.label||'')}</div>${d.note?`<div style="font-size:11px;color:var(--tx-3)">${esc(d.note)}</div>`:''}</div>
+        </div>`).join('')}</div>`:''}
+      ${s.notes?`<p style="font-size:11px;color:var(--tx-4);line-height:1.5">${esc(s.notes)}</p>`:''}
+    `;
+    const mb = $('#modal-body'); if(mb) mb.innerHTML = body;
+  }catch(e){
+    const mb = $('#modal-body'); if(mb) mb.innerHTML = `<p style="color:var(--dn);font-size:13px">${esc(e.message)}</p>`;
   }
 }
 /* ---------- buscador de leads: sai coletando de verdade ---------- */
