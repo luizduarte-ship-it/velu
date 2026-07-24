@@ -2656,18 +2656,15 @@ function openLeadMenu(anchor){
 async function leadAction(l, act){
   if(act === 'prep') return leadPrep(l);
   if(act === 'pipe'){
-    if(l.stage === 'fechado' || l.stage === 'perdido'){
-      const prev = l.stage;
-      l.stage = 'contato'; l.stage_since = new Date().toISOString();
-      const { error } = await SB.from('leads').update({ stage:'contato', stage_since:l.stage_since }).eq('id', l.id);
-      if(error){ l.stage = prev; return toast(error.message, true); }
-    }else if(l.stage === 'novo'){
-      l.stage = 'contato'; l.stage_since = new Date().toISOString();
-      const { error } = await SB.from('leads').update({ stage:'contato', stage_since:l.stage_since }).eq('id', l.id);
-      if(error){ l.stage = 'novo'; return toast(error.message, true); }
-    }
+    if(l.in_pipeline) return toast(`${l.name} já está no Pipeline.`);
+    const prevStage = l.stage, prevIn = l.in_pipeline;
+    l.in_pipeline = true;
+    if(l.stage === 'perdido' || l.stage === 'fechado') l.stage = 'novo';
+    l.stage_since = new Date().toISOString();
+    const { error } = await SB.from('leads').update({ in_pipeline:true, stage:l.stage, stage_since:l.stage_since }).eq('id', l.id);
+    if(error){ l.in_pipeline = prevIn; l.stage = prevStage; return toast(error.message, true); }
     paintBoard(); pipeCounts();
-    return toast(`${l.name} no Pipeline, em Contato.`);
+    return toast(`${l.name} adicionada ao Pipeline.`);
   }
   if(act === 'dispatch'){
     go('dispatch');
@@ -2842,7 +2839,7 @@ $('#uf').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isCo
 /* ============================================================ PIPELINE (arrastar de verdade) ============================================================ */
 const STAGES = [['novo','Novo'],['contato','Contato'],['proposta','Proposta'],['fechado','Fechado']];
 function paintBoard(){
-  const open = S.leads.filter(l => l.stage !== 'perdido');
+  const open = S.leads.filter(l => l.in_pipeline && l.stage !== 'perdido');
   $('#pipe-total').textContent = kbrl(open.filter(l => l.stage !== 'fechado').reduce((s,l) => s + Number(l.value_monthly ?? 0), 0));
   $('#board').innerHTML = STAGES.map(([k,label]) => {
     const deals = open.filter(l => l.stage === k);
@@ -2889,7 +2886,7 @@ function wireDrag(){
 }
 
 function pipeCounts(){
-  $('#nc-pipe').textContent = S.leads.filter(l => l.stage !== 'fechado' && l.stage !== 'perdido').length;
+  $('#nc-pipe').textContent = S.leads.filter(l => l.in_pipeline && l.stage !== 'fechado' && l.stage !== 'perdido').length;
 }
 
 /* ---- uso diário (barra de limite) ---- */
@@ -2922,7 +2919,7 @@ document.addEventListener('click', async e => {
   const valueRaw = prompt('Valor mensal estimado em R$ (opcional, só números):', '');
   const value_monthly = valueRaw && !isNaN(parseFloat(valueRaw.replace(',','.'))) ? parseFloat(valueRaw.replace(',','.')) : null;
   const { data, error } = await SB.from('leads').insert({
-    company_id: S.profile.company_id, name: name.trim(), stage: 'novo',
+    company_id: S.profile.company_id, name: name.trim(), stage: 'novo', in_pipeline: true,
     value_monthly, stage_since: new Date().toISOString(), collection_method: 'manual'
   }).select().maybeSingle();
   if(error) return toast(error.message, true);
@@ -2930,19 +2927,19 @@ document.addEventListener('click', async e => {
   toast(`${data.name} adicionada ao pipeline.`);
 });
 
-/* excluir empresa do pipeline */
+/* tirar empresa do pipeline (mantém o lead na lista de Leads) */
 document.addEventListener('click', async e => {
   const b = e.target.closest('[data-deal-del]'); if(!b) return;
   e.stopPropagation();
   const id = b.dataset.dealDel;
   const lead = S.leads.find(l => l.id === id);
   if(!lead) return;
-  if(!confirm(`Remover "${lead.name}" do pipeline? Isso apaga o lead.`)) return;
-  const { error } = await SB.from('leads').delete().eq('id', id);
-  if(error) return toast(error.message, true);
-  S.leads = S.leads.filter(l => l.id !== id);
+  if(!confirm(`Tirar "${lead.name}" do pipeline? Ela continua na lista de Leads.`)) return;
+  const prev = lead.in_pipeline; lead.in_pipeline = false;
+  const { error } = await SB.from('leads').update({ in_pipeline:false }).eq('id', id);
+  if(error){ lead.in_pipeline = prev; return toast(error.message, true); }
   paintBoard(); pipeCounts();
-  toast(`${lead.name} removida.`);
+  toast(`${lead.name} saiu do pipeline.`);
 });
 
 /* ============================================================ PROMPTS ============================================================ */
