@@ -604,6 +604,11 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 .deal-del{flex:0 0 auto;width:22px;height:22px;display:grid;place-items:center;border-radius:5px;color:var(--tx-4);margin:-3px -3px 0 0;transition:background .12s,color .12s}
 .deal-del:hover{background:var(--dn-bg);color:var(--dn)}
 .deal-del .i{width:12px;height:12px}
+.deal-menu{flex:0 0 auto;width:22px;height:22px;display:grid;place-items:center;border-radius:5px;color:var(--tx-4);margin:-3px -3px 0 0;transition:background .12s var(--ease),color .12s var(--ease)}
+.deal-menu:hover{background:var(--panel-2);color:var(--tx)}
+.deal-menu .i{width:13px;height:13px}
+.deal-due{display:flex;align-items:center;gap:5px;margin-top:8px;padding-top:7px;border-top:1px solid var(--line);font-size:10px;font-weight:600;color:var(--brand-lift)}
+.deal-due .i{color:var(--brand-lift);width:12px;height:12px}
 .deal-v{font-size:11px;font-weight:500;color:var(--tx-3);font-variant-numeric:tabular-nums}
 
 /* ============================================================ PERSONALIZAR ============================================================ */
@@ -2907,8 +2912,9 @@ function paintBoard(){
         const days = Math.floor((Date.now() - new Date(d.stage_since)) / 864e5);
         const stale = days > 21 && k !== 'fechado';
         return `<div class="deal" draggable="true" data-deal="${d.id}">
-          <div class="deal-top"><div class="deal-n">${esc(d.name)}</div><button class="deal-del" data-deal-del="${d.id}" title="Remover do pipeline" aria-label="Remover ${esc(d.name)}"><svg class="i i-sm"><use href="#ic-x"/></svg></button></div>
+          <div class="deal-top"><div class="deal-n">${esc(d.name)}</div><button class="deal-menu" data-deal-menu="${d.id}" title="Ações" aria-label="Ações de ${esc(d.name)}"><svg class="i i-sm"><use href="#ic-more"/></svg></button></div>
           <div class="deal-v">${brl(d.value_monthly)} / mês</div>
+          ${d.due_date ? `<div class="deal-due">${ico('clock','i i-sm')} prazo ${dmy(d.due_date)}</div>` : ''}
           ${stale ? `<div class="deal-stale">${ico('clock','i i-sm')} parado há ${days} dias</div>` : ''}
         </div>`;
       }).join('')}</div>
@@ -2984,20 +2990,85 @@ document.addEventListener('click', async e => {
   toast(`${data.name} adicionada ao pipeline.`);
 });
 
-/* tirar empresa do pipeline (mantém o lead na lista de Leads) */
-document.addEventListener('click', async e => {
-  const b = e.target.closest('[data-deal-del]'); if(!b) return;
-  e.stopPropagation();
-  const id = b.dataset.dealDel;
-  const lead = S.leads.find(l => l.id === id);
-  if(!lead) return;
-  if(!confirm(`Tirar "${lead.name}" do pipeline? Ela continua na lista de Leads.`)) return;
-  const prev = lead.in_pipeline; lead.in_pipeline = false;
-  const { error } = await SB.from('leads').update({ in_pipeline:false }).eq('id', id);
-  if(error){ lead.in_pipeline = prev; return toast(error.message, true); }
-  paintBoard(); pipeCounts();
-  toast(`${lead.name} saiu do pipeline.`);
+/* menu de 3 pontos do card do pipeline */
+const dmy = s => s ? new Date(s + 'T12:00').toLocaleDateString('pt-BR') : '';
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-deal-menu]'); if(!b) return;
+  e.stopPropagation(); e.preventDefault();
+  openDealMenu(b);
 });
+function openDealMenu(anchor){
+  closePop();
+  const l = S.leads.find(x => x.id === anchor.dataset.dealMenu);
+  if(!l) return;
+  const rect = anchor.getBoundingClientRect();
+  const pop = document.createElement('div');
+  pop.className = 'pop';
+  pop.innerHTML = `
+    <button data-act="rename">${ico('edit','i i-sm')}Editar nome</button>
+    <button data-act="value">${ico('briefcase','i i-sm')}Alterar valor</button>
+    <button data-act="date">${ico('clock','i i-sm')}Definir data (prazo)</button>
+    <div class="sep"></div>
+    <button data-act="unpipe">${ico('arrow-r','i i-sm')}Tirar do pipeline</button>
+    <button data-act="del" class="danger">${ico('trash','i i-sm')}Excluir lead</button>
+  `;
+  document.body.appendChild(pop);
+  placePop(pop, rect);
+  S.pop = pop;
+  pop.querySelectorAll('[data-act]').forEach(btn =>
+    btn.addEventListener('click', () => { closePop(); dealAction(l, btn.dataset.act); }));
+  setTimeout(() => document.addEventListener('click', closePop, { once:true }), 0);
+}
+async function dealAction(l, act){
+  if(act === 'rename'){
+    const name = prompt('Novo nome da empresa:', l.name);
+    if(!name?.trim() || name.trim() === l.name) return;
+    const prev = l.name; l.name = name.trim();
+    const { error } = await SB.from('leads').update({ name: l.name }).eq('id', l.id);
+    if(error){ l.name = prev; return toast(error.message, true); }
+    paintBoard(); paintLeads($('#niche')?.value.trim()); return toast('Nome atualizado.');
+  }
+  if(act === 'value'){
+    const raw = prompt('Valor mensal em R$ (só números):', l.value_monthly != null ? String(l.value_monthly) : '');
+    if(raw === null) return;
+    const clean = raw.trim();
+    const v = clean === '' ? null : parseFloat(clean.replace(/[^\d,.-]/g,'').replace(',','.'));
+    if(clean !== '' && isNaN(v)) return toast('Valor inválido.', true);
+    const prev = l.value_monthly; l.value_monthly = v;
+    const { error } = await SB.from('leads').update({ value_monthly: v }).eq('id', l.id);
+    if(error){ l.value_monthly = prev; return toast(error.message, true); }
+    paintBoard(); return toast('Valor atualizado.');
+  }
+  if(act === 'date'){
+    const raw = prompt('Data limite (dd/mm/aaaa). Deixe vazio para remover:', l.due_date ? dmy(l.due_date) : '');
+    if(raw === null) return;
+    let iso = null;
+    if(raw.trim()){
+      const m = raw.trim().match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+      if(!m) return toast('Use o formato dd/mm/aaaa.', true);
+      let [,dd,mm,yy] = m; if(yy.length === 2) yy = '20' + yy;
+      iso = `${yy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
+      if(isNaN(new Date(iso + 'T12:00').getTime())) return toast('Data inválida.', true);
+    }
+    const prev = l.due_date; l.due_date = iso;
+    const { error } = await SB.from('leads').update({ due_date: iso }).eq('id', l.id);
+    if(error){ l.due_date = prev; return toast(error.message, true); }
+    paintBoard(); return toast(iso ? 'Prazo definido.' : 'Prazo removido.');
+  }
+  if(act === 'unpipe'){
+    const prev = l.in_pipeline; l.in_pipeline = false;
+    const { error } = await SB.from('leads').update({ in_pipeline:false }).eq('id', l.id);
+    if(error){ l.in_pipeline = prev; return toast(error.message, true); }
+    paintBoard(); pipeCounts(); return toast(`${l.name} saiu do pipeline.`);
+  }
+  if(act === 'del'){
+    if(!confirm(`Excluir "${l.name}" de vez? Isso apaga o lead da lista também.`)) return;
+    const { error } = await SB.from('leads').delete().eq('id', l.id);
+    if(error) return toast(error.message, true);
+    S.leads = S.leads.filter(x => x.id !== l.id);
+    paintBoard(); pipeCounts(); return toast(`${l.name} excluída.`);
+  }
+}
 
 /* ============================================================ PROMPTS ============================================================ */
 function fill(body){
