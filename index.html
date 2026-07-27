@@ -805,7 +805,7 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 
 /* --- popup de contexto --- */
 .pop{
-  position:absolute;background:linear-gradient(180deg,var(--panel-2),var(--panel));
+  position:fixed;background:linear-gradient(180deg,var(--panel-2),var(--panel));
   border:1px solid var(--line-2);border-radius:11px;
   padding:6px;box-shadow:var(--e3);z-index:50;min-width:210px;font-size:12.5px;
   transform-origin:top right;animation:popIn .18s var(--ease);
@@ -2091,6 +2091,17 @@ function paintHistory(list){
     m.addEventListener('click', e => { e.stopPropagation(); openConvoMenu(m); }));
 }
 
+/* posiciona um .pop (position:fixed) ao lado do gatilho, sem vazar da tela */
+function placePop(pop, rect){
+  const m = 8, ph = pop.offsetHeight, pw = pop.offsetWidth;
+  let top = rect.bottom + 6;
+  if(top + ph > window.innerHeight - m) top = Math.max(m, rect.top - ph - 6);
+  let left = Math.min(rect.right - pw, window.innerWidth - pw - m);
+  left = Math.max(m, left);
+  pop.style.top = Math.round(top) + 'px';
+  pop.style.left = Math.round(left) + 'px';
+}
+
 /* menu de contexto – renomear, favoritar, marcar não-lida, exportar, criar projeto, apagar */
 function openConvoMenu(anchor){
   closePop();
@@ -2099,8 +2110,6 @@ function openConvoMenu(anchor){
   const rect = anchor.getBoundingClientRect();
   const pop = document.createElement('div');
   pop.className = 'pop';
-  pop.style.top = (rect.bottom + 6) + 'px';
-  pop.style.left = Math.min(rect.left - 100, window.innerWidth - 200) + 'px';
   pop.innerHTML = `
     <button data-act="rename">${ico('edit','i i-sm')}Renomear</button>
     <button data-act="fav">${ico(c.favorite?'star-fill':'star','i i-sm')}${c.favorite?'Desfavoritar':'Favoritar'}</button>
@@ -2112,6 +2121,7 @@ function openConvoMenu(anchor){
     <button data-act="del" class="danger">${ico('trash','i i-sm')}Apagar conversa</button>
   `;
   document.body.appendChild(pop);
+  placePop(pop, rect);
   S.pop = pop;
   pop.querySelectorAll('[data-act]').forEach(b =>
     b.addEventListener('click', () => convoAction(c, b.dataset.act)));
@@ -2638,8 +2648,6 @@ function openLeadMenu(anchor){
   const rect = anchor.getBoundingClientRect();
   const pop = document.createElement('div');
   pop.className = 'pop';
-  pop.style.top = (rect.bottom + 6) + 'px';
-  pop.style.left = Math.min(rect.right - 210, window.innerWidth - 224) + 'px';
   pop.innerHTML = `
     <button data-act="prep">${ico('sparkles','i i-sm')}Abrir preparação</button>
     <button data-act="price">${ico('briefcase','i i-sm')}Sugerir valor e desconto</button>
@@ -2648,6 +2656,7 @@ function openLeadMenu(anchor){
     <button data-act="dispatch">${ico('send','i i-sm')}Enviar para o Agente de disparo</button>
   `;
   document.body.appendChild(pop);
+  placePop(pop, rect);
   S.pop = pop;
   pop.querySelectorAll('[data-act]').forEach(b =>
     b.addEventListener('click', () => { closePop(); leadAction(l, b.dataset.act); }));
