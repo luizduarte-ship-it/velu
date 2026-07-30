@@ -1,124 +1,117 @@
-# VELU — contexto do projeto
+# CLAUDE.md
 
-Este arquivo orienta o Claude Code. Leia antes de mexer em qualquer coisa.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+Este projeto e escrito e operado em portugues do Brasil. Escreva respostas,
+commits e textos de produto em pt-BR.
 
 ## Objetivo do projeto
-VELU é um SaaS de inteligência comercial (CRM + IA) vendido para várias
-empresas. Cada empresa cliente é uma linha na tabela `companies`; o mesmo
-sistema atende todas, e o contexto de cada uma é injetado em tempo de
-execução. A IA do produto se chama "Velu".
+VELU e um SaaS de inteligencia comercial (CRM + IA) vendido para varias
+empresas. Cada empresa cliente e uma linha na tabela `companies`; o mesmo
+sistema atende todas, e o contexto de cada uma e injetado em tempo de execucao.
+A IA do produto se chama "Velu". Esta no ar em **https://velucrm.com**.
 
-## Estrutura dos arquivos
-Repositório enxuto, sem build. Estado atual (atualizar esta lista quando
-algo for adicionado ou removido):
+## Estrutura do repositorio
+Repo enxuto, sem build no frontend. Atualizar esta lista quando algo mudar:
+- `index.html` (raiz, ~4200 linhas): o produto inteiro, HTML + CSS + JS puro num
+  unico arquivo, sem framework. Usa supabase-js via CDN. E grande: nunca ler
+  inteiro; localizar por palavra-chave (nome de funcao, classe CSS, texto
+  visivel) e ler so o trecho ao redor.
+- `netlify.toml`: config de deploy. No build, copia `index.html` para `dist/` e
+  publica `dist/` (assim CLAUDE.md e o resto do repo nao vao para o ar).
+- `dist/`: gerado no build, ignorado no git.
+- `CLAUDE.md`: este arquivo.
+- As edge functions (Deno/TypeScript) nao ficam versionadas neste repo; vivem no
+  Supabase (deploy via MCP ou `supabase functions deploy <slug>`).
 
-- `index.html` (raiz, ~3900 linhas): frontend inteiro, HTML + CSS + JS puro,
-  sem framework. Usa o cliente supabase-js via CDN. É um arquivo grande,
-  nunca ler inteiro sem necessidade (ver regras abaixo).
-- `CLAUDE.md` (raiz): este arquivo.
-- `supabase/functions/<slug>/index.ts` (ainda não versionado neste repo,
-  mas faz parte da arquitetura real do produto): Edge Functions em
-  Deno/TypeScript. Quando existirem aqui, cada pasta é uma function
-  independente.
+## Comandos
+- **Publicar o frontend:** `git push` no branch de trabalho. A Netlify observa o
+  repo e faz build+deploy automatico em `velucrm.com` (~1-2 min). Nao existe
+  passo de build manual nem upload de arquivo.
+- **Preview local:** abrir `index.html` no navegador (ou servir a pasta). Sem build.
+- **Deploy de edge function:** `supabase functions deploy <slug>` (projeto
+  `hjtdkfrlogktvmkeauwf`), ou a ferramenta MCP `deploy_edge_function`.
+- **Checar sintaxe do JS do index.html** (nao ha lint/test): extrair os blocos
+  `<script>` inline e rodar `node --check` em cada um.
+- **Verificar a UI** (nao ha suite de testes): renderizar `index.html` num
+  Chromium headless via Playwright (`/opt/pw-browsers/...`) apontando para
+  `file:///.../index.html`, com `window.supabase` mockado (a app chama o
+  Supabase no boot). Serve para conferir telas, abrir menus e diálogos.
 
 ## Arquitetura
-- Frontend: `index.html` único, publicado subindo o arquivo no host e
-  limpando cache. Sem etapa de build.
-- Backend: Supabase (projeto hjtdkfrlogktvmkeauwf, região sa-east-1).
-  Postgres com RLS, multi-tenant (o usuário só enxerga a própria empresa).
-  Edge Functions em Deno/TypeScript em `supabase/functions/<slug>/index.ts`,
-  deploy com `supabase functions deploy <slug>`.
+- **Frontend:** `index.html` unico. Estado global no objeto `S`. Navegacao troca
+  `.view.on`. Render por funcoes `paint*` que reescrevem innerHTML. Sem router,
+  sem componentes.
+- **Backend:** Supabase (projeto `hjtdkfrlogktvmkeauwf`, regiao sa-east-1).
+  Postgres com RLS, multi-tenant (o usuario so enxerga a propria empresa via
+  `company_id`). Edge Functions em Deno/TypeScript.
+- **Hospedagem:** Netlify (projeto `velu-crm-ia`), dominio `velucrm.com`
+  (registrado no Namecheap), HTTPS automatico. Deploy continuo ligado ao GitHub.
 
-### Edge functions principais
-- chat: o cérebro da IA. Monta o system prompt por modo (empresa, livre,
-  code), injeta contexto da empresa, memória, skills (seleção automática pela
-  mensagem) e arquivos, e faz streaming da resposta da Anthropic com busca web.
-- find-leads: geração de leads. Interpreta nicho ou intenção ampla, pesquisa
-  na web (streaming, orçamento de ~120s), valida e grava em `leads`, com
-  gancho de abordagem por lead.
-- profile-company: coleta o perfil público da empresa e preenche companies.profile.
-- learn: memória contínua (ai_memories).
-- Outras: analyze, image, video-assist, lead-worker (cron), lead-pipeline-health.
+### Edge functions
+- **find-leads:** motor de prospeccao. **Nao usa Claude** (para nao gastar
+  credito). Busca na base publica de CNPJ via **CNPJa** (`api.cnpja.com/office`,
+  token no secret `CNPJA_TOKEN`). Filtros: `mainActivity.id.in` (CNAE),
+  `address.state.in` (UF), `status.id.in=2` (ativa); pagina pelo cursor `token`
+  (mutuamente exclusivo dos filtros); custo ~1 credito por 10 registros. Traduz
+  o nicho em CNAE por um mapa interno (fallback `names.in` por nome). O frontend
+  dirige um **loop de lotes** (leads aparecem ao vivo, com barra de progresso e
+  botao de abortar); `recommend:true` retorna a contagem real do mercado para
+  sugerir a meta (100 a 400). Grava lote a lote em `leads` e devolve os novos.
+- **price-suggest:** sugere valor a cobrar e descontos por lead. **Usa Claude**
+  (`claude-sonnet-4-6`, secret `ANTHROPIC_API_KEY`), sob demanda (um lead por
+  clique, no menu de 3 pontos). Se o saldo Anthropic zerar, a API responde 400
+  "credit balance too low" (a funcao devolve mensagem amigavel).
+- **chat:** o cerebro da IA (modo empresa/livre/code, memoria, skills, arquivos,
+  streaming da Anthropic com busca web). **learn:** memoria continua
+  (ai_memories). **profile-company, analyze, image, video-assist,
+  lead-worker (cron).**
+- `cnpj-probe` e `ai-probe` sao sondas de teste desativadas (retornam 410/403);
+  podem ser removidas pelo painel do Supabase.
 
-### Tabelas centrais
-companies (contexto por cliente: name, sector, positioning, icp, tone, rules,
-description, profile), profiles (usuário -> company_id), competitors +
-competitor_notes (dossiês), leads (pipeline, campos stage e campaign_hook),
-lead_runs, skills, conversations, messages, ai_memories, files, lead_evidence.
+### Tabelas centrais (public schema)
+`companies` (contexto por cliente: name, sector, positioning, icp, tone, rules,
+description, profile, daily_lead_limit), `profiles` (usuario -> company_id),
+`competitors` + `competitor_notes` (dossies), `leads` (pipeline e prospeccao),
+`lead_runs` (execucoes de busca; cursor de paginacao em `progress.next`),
+`skills`, `conversations`, `messages`, `ai_memories`, `files`, `usage_counters`.
+- `leads.in_pipeline` (bool): o Pipeline so mostra leads com `in_pipeline=true`.
+  Leads gerados NAO entram no board sozinhos; a entrada e manual pelo menu de 3
+  pontos. `leads.due_date` (date): prazo mostrado no card.
 
-## Convenções do produto (importantes)
-- Tudo em português do Brasil.
-- Nunca use travessão (—). Use vírgula, ponto ou parênteses.
+### Padroes de UI (importantes)
+- **Nunca usar `confirm`/`prompt`/`alert` do navegador** (aparece "o site diz").
+  Use `uiConfirm(msg, {okText, danger})` e `uiPrompt(label, value, {okText,
+  placeholder})`, que retornam Promise e renderizam dialogo proprio.
+- Menus de contexto (3 pontos) usam a classe `.pop` com `position:fixed` +
+  `placePop(pop, rect)`, que ancora ao lado do gatilho e nao vaza da tela. Ha
+  menus de 3 pontos nos cards de Leads e do Pipeline.
+- `openModal`/`closeModal` para modais de conteudo (ex.: sugestao de preco).
+- O favicon e a logo "V" embutida em base64 no `<head>`.
+
+## Convencoes do produto
+- Tudo em portugues do Brasil.
+- **Nunca use travessao (—).** Use virgula, ponto ou parenteses. Vale para todo
+  texto voltado ao usuario final (o "—" so pode existir em regex que o trata).
 - Interface enxuta e profissional, nada de excesso de emoji.
-- No chat, o efeito de digitação só acompanha o rodapé se o usuário já estiver
-  no fim (não puxe a tela pra cima).
-- Ao mexer numa edge function, mude só o necessário e mantenha a lógica.
-  Cada deploy é versionado no Supabase, dá pra reverter.
-- A IA usa o modelo claude-sonnet-4-6 e a busca web nas funções.
-
-## Como publicar
-- Frontend: subir o index.html no host e limpar cache.
-- Backend: supabase functions deploy <slug>.
+- No chat, o efeito de digitacao so acompanha o rodape se o usuario ja estiver no
+  fim (nao puxe a tela pra cima).
+- Ao mexer numa edge function, mude so o necessario; cada deploy e versionado no
+  Supabase (da pra reverter).
 
 ## Onboarding de cliente novo
-Criar, na ordem: linha em companies (slug + name + contexto), usuário de
-acesso (auth) e linha em profiles ligando o usuário à empresa. Não há gatilho
-automático.
+Criar, na ordem: linha em `companies` (slug + name + contexto), usuario de acesso
+(auth) e linha em `profiles` ligando o usuario a empresa. Nao ha gatilho automatico.
 
----
-
-## Regras de trabalho para o Claude Code neste projeto
-
-O objetivo aqui é gastar o mínimo de tokens possível e nunca ler arquivos
-sem necessidade real.
-
-### Economia de tokens
-- Antes de qualquer alteração, olhe primeiro a estrutura (`ls`, tamanhos de
-  arquivo) em vez de abrir arquivos de cara.
-- Nunca leia um arquivo inteiro só para "ter contexto geral". Use busca
-  (grep/Grep) para achar a seção, função ou trecho relevante, e leia só essa
-  faixa de linhas.
-- `index.html` é grande (milhares de linhas, CSS + JS + HTML no mesmo
-  arquivo). Para editar algo nele, primeiro localize por palavra-chave
-  (nome de função, classe CSS, texto visível) e leia só o trecho ao redor do
-  match, não o arquivo todo.
-- Se precisar entender o fluxo de uma função específica, leia só essa
-  função, não o arquivo inteiro em volta dela.
-- Evite reler arquivos que já foram lidos nesta mesma conversa, a menos que
-  algo tenha mudado desde então.
-
-### Edição segura
-- Prefira mudanças pequenas, cirúrgicas e fáceis de revisar (diffs curtos) a
-  reescritas grandes.
-- Não apague trechos de código, dados ou configuração sem avisar antes e
-  explicar o motivo.
-- Não invente bibliotecas, dependências, endpoints ou APIs que não existam
-  no projeto. Se for necessário algo novo, explique o porquê antes de usar.
-- Ao editar uma edge function, mude apenas o necessário para a tarefa pedida
-  e preserve a lógica existente ao redor.
-- Nunca use `—` (travessão) em textos voltados ao usuário final do produto.
-
-### Antes de modificar qualquer arquivo
-Sempre, antes de editar:
-1. Diga quais arquivos pretende alterar.
-2. Diga por quê (qual problema ou pedido isso resolve).
-3. Só então faça a edição.
-
-Não é preciso pedir aprovação passo a passo para cada linha, mas o usuário
-precisa saber o alvo e o motivo antes da mudança acontecer.
-
-### Como testar ou revisar alterações
-- Não há suíte de testes automatizada neste projeto. A verificação é manual.
-- Para o frontend (`index.html`): como não há build, a forma mais direta de
-  checar é abrir o arquivo (ou servir localmente) e conferir visualmente a
-  tela afetada, não o site inteiro.
-- Para edge functions: `supabase functions deploy <slug>` já versiona o
-  deploy (dá pra reverter), então prefira mudanças pequenas e testáveis
-  isoladamente por função.
-- Depois de qualquer alteração, resuma exatamente o que mudou (quais
-  arquivos, quais trechos, e por quê), para facilitar a revisão do usuário.
-
-### Resumo final obrigatório
-Ao terminar uma tarefa, sempre responder com um resumo direto do que foi
-alterado, sem inflar com detalhes irrelevantes nem repetir o que já foi dito
-durante a execução.
+## Regras de trabalho (economia de tokens e edicao segura)
+- Antes de qualquer alteracao, olhe a estrutura (`ls`, tamanhos) em vez de abrir
+  arquivos de cara. Nunca leia um arquivo inteiro so para "ter contexto". Use
+  grep/Grep para achar a secao e leia so a faixa relevante. Evite reler o que ja
+  foi lido nesta conversa.
+- Antes de editar: diga **quais arquivos** vai mudar e **por que**; so entao edite.
+  Nao e preciso aprovar linha a linha, mas o alvo e o motivo precisam ficar claros.
+- Prefira diffs curtos e cirurgicos a reescritas grandes. Nao apague codigo/dados
+  sem avisar. Nao invente libs, endpoints ou APIs que nao existem.
+- Verificacao e manual: para o frontend, renderizar/abrir a tela afetada (ver
+  Comandos); para edge functions, deploy pequeno e testavel por funcao.
+- Ao terminar, resuma de forma direta o que mudou (arquivos, trechos, motivo).
