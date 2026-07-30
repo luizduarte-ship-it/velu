@@ -1564,10 +1564,11 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
         <div class="img-composer">
           <textarea class="field" id="img-prompt" placeholder="Uma foto de estúdio do seu produto em um cenário profissional, luz cinematográfica, ângulo baixo…" style="min-height:80px;resize:vertical"></textarea>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:14px;flex-wrap:wrap">
-            <div class="img-size" role="tablist">
-              <button aria-pressed="true"  data-size="1024x1024" title="Quadrado, feed">Quadrado</button>
-              <button aria-pressed="false" data-size="1024x1536" title="Retrato, story/reel">Retrato</button>
-              <button aria-pressed="false" data-size="1536x1024" title="Paisagem, banner">Paisagem</button>
+            <div class="img-size" role="tablist" aria-label="Formato da imagem">
+              <button data-aspect="9:16" aria-pressed="true"  title="Stories, Reels, TikTok (vertical)">9:16 · Reels/TikTok</button>
+              <button data-aspect="4:5"  aria-pressed="false" title="Feed do Instagram (retrato)">4:5 · Feed</button>
+              <button data-aspect="1:1"  aria-pressed="false" title="Quadrado, feed">1:1 · Quadrado</button>
+              <button data-aspect="16:9" aria-pressed="false" title="YouTube, banner, apresentação">16:9 · YouTube</button>
             </div>
             <div style="display:flex;align-items:center;gap:8px">
               <button class="tool-ico" id="image-voice" title="Escrever por voz" aria-label="Escrever por voz" aria-pressed="false"><svg class="i"><use href="#ic-mic"/></svg></button>
@@ -1575,6 +1576,16 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
             </div>
           </div>
           <p style="font-size:11px;color:var(--tx-4);margin-top:10px;line-height:1.55">Enter gera; Shift + Enter quebra linha. O microfone escreve o pedido por voz.</p>
+          <div class="chips" id="img-ideas" style="margin-top:14px">
+            <button class="chip" data-imgprompt="Foto de estúdio do produto sobre fundo cor sólida, luz suave difusa, sombra limpa, estilo editorial premium, alta nitidez, espaço negativo para texto.">Produto no estúdio</button>
+            <button class="chip" data-imgprompt="Post para Instagram com fundo gradiente moderno, tipografia grande e ousada, layout minimalista com bastante respiro, paleta sóbria e profissional, visual de marca de tecnologia.">Post de feed</button>
+            <button class="chip" data-imgprompt="Fundo para Stories vertical, formas geométricas abstratas em degradê, iluminação cinematográfica, área central limpa para chamada e botão, aparência sofisticada.">Fundo para Stories</button>
+            <button class="chip" data-imgprompt="Banner de anúncio com pessoa real usando notebook em ambiente de escritório claro e moderno, luz natural, foco no rosto satisfeito, espaço lateral para headline.">Anúncio com pessoa</button>
+            <button class="chip" data-imgprompt="Mockup de dashboard de CRM em uma tela de notebook sobre mesa de madeira clara, café ao lado, profundidade de campo suave, ambiente de trabalho aconchegante.">Mockup de tela</button>
+            <button class="chip" data-imgprompt="Ilustração flat vetorial de crescimento de vendas, gráfico subindo, ícones de negócio, paleta azul e branco, estilo corporativo limpo, sem texto.">Ilustração de vendas</button>
+            <button class="chip" data-imgprompt="Foto lifestyle de equipe comemorando resultado em escritório moderno, luz quente ao entardecer, clima de conquista, composição natural e espontânea.">Time comemorando</button>
+            <button class="chip" data-imgprompt="Textura de fundo premium para apresentação, degradê escuro azul profundo com brilho sutil, partículas de luz delicadas, elegante e discreto.">Fundo de slide</button>
+          </div>
         </div>
 
         <div id="img-grid" class="img-grid"></div>
@@ -4124,12 +4135,12 @@ async function paintImages(){
     </a>`).join('');
 }
 
-document.querySelectorAll('#v-image [data-size]').forEach(b => b.addEventListener('click', () => {
-  document.querySelectorAll('#v-image [data-size]').forEach(x => x.setAttribute('aria-pressed','false'));
+document.querySelectorAll('#v-image [data-aspect]').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#v-image [data-aspect]').forEach(x => x.setAttribute('aria-pressed','false'));
   b.setAttribute('aria-pressed','true');
-  S.imgSize = b.dataset.size;
+  S.imgAspect = b.dataset.aspect;
 }));
-S.imgSize = '1024x1024';
+S.imgAspect = '9:16';
 
 $('#img-go').addEventListener('click', async () => {
   const prompt = $('#img-prompt').value.trim();
@@ -4144,7 +4155,7 @@ $('#img-go').addEventListener('click', async () => {
     const res = await fetch(IMG_FN, {
       method:'POST',
       headers:{ 'Content-Type':'application/json', 'Authorization':`Bearer ${session.access_token}` },
-      body: JSON.stringify({ prompt, size: S.imgSize })
+      body: JSON.stringify({ prompt, aspect: S.imgAspect })
     });
     const out = await res.json();
     if(!res.ok) throw new Error(out.error ?? `Erro ${res.status}`);
@@ -4159,6 +4170,12 @@ $('#img-go').addEventListener('click', async () => {
   }
 });
 $('#img-prompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();$('#img-go').click();}});
+document.querySelectorAll('#img-ideas [data-imgprompt]').forEach(b => b.addEventListener('click', () => {
+  const t = $('#img-prompt');
+  t.value = b.dataset.imgprompt;
+  resizeSmartInput(t);
+  t.focus();
+}));
 
 /* ============================================================ VELU CODE ============================================================ */
 async function sendCode(){
