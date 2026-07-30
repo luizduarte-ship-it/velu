@@ -838,6 +838,15 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 /* --- modal --- */
 .modal-bg{position:fixed;inset:0;background:rgba(11,21,36,.75);backdrop-filter:blur(4px);z-index:100;display:grid;place-items:center;padding:20px;animation:fade .18s}
 .modal{background:var(--panel);border:1px solid var(--line-2);border-radius:12px;box-shadow:var(--e3);width:100%;max-width:520px;max-height:88vh;overflow:auto;animation:rise .22s cubic-bezier(.16,1,.3,1)}
+/* --- dialogos proprios (substituem confirm/prompt do navegador) --- */
+.modal.modal-sm{max-width:430px}
+.dlg-bd{padding:18px 20px 20px}
+.dlg-bd h2{font-size:16px;font-weight:700;letter-spacing:-.015em;margin-bottom:8px}
+.dlg-msg{font-size:13px;color:var(--tx-2);line-height:1.6;white-space:pre-wrap}
+.dlg-bd .field{margin-top:14px}
+.dlg-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}
+.btn-danger{background:var(--dn);border-color:var(--dn);color:#fff}
+.btn-danger:hover{background:#c04357;border-color:#c04357;box-shadow:0 2px 12px rgba(210,86,106,.32)}
 .modal-hd{padding:18px 20px 4px;display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
 .modal-hd h2{font-size:16px;font-weight:700;letter-spacing:-.015em}
 .modal-hd .cap{font-size:12px;color:var(--tx-2);margin-top:3px}
@@ -2192,7 +2201,7 @@ async function exportDocx(title, messages){
 async function convoAction(c, act){
   closePop();
   if(act === 'rename'){
-    const name = prompt('Novo nome da conversa:', c.title);
+    const name = await uiPrompt('Novo nome da conversa', c.title, { okText:'Salvar' });
     if(!name || name === c.title) return;
     await SB.from('conversations').update({ title: name.slice(0,80) }).eq('id', c.id);
     reloadHistory();
@@ -2206,7 +2215,7 @@ async function convoAction(c, act){
     reloadHistory();
   }
   if(act === 'del'){
-    if(!confirm(`Apagar "${c.title}"? Não dá pra desfazer.`)) return;
+    if(!await uiConfirm(`Apagar "${c.title}"? Não dá pra desfazer.`, { okText:'Apagar', danger:true })) return;
     await SB.from('conversations').delete().eq('id', c.id);
     reloadHistory();
     if(S.convo === c.id){ S.convo = null; $('#thread').innerHTML = ''; $('#hero-top').style.display = ''; }
@@ -2218,7 +2227,7 @@ async function convoAction(c, act){
     await exportDocx(c.title, data ?? []);
   }
   if(act === 'project'){
-    const name = prompt('Nome do novo projeto:', c.title);
+    const name = await uiPrompt('Nome do novo projeto', c.title, { okText:'Criar' });
     if(!name) return;
     const { data: p } = await SB.from('projects').insert({
       company_id: S.profile.company_id, name, description: 'Criado a partir da conversa: '+c.title
@@ -2705,6 +2714,42 @@ function openModal(title, cap, bodyHtml){
   return bg;
 }
 function closeModal(){ if(S.modal){ S.modal.remove(); S.modal = null; } }
+
+/* ---- dialogos proprios (substituem confirm/prompt do navegador) ---- */
+function uiDialog({ title='', message='', isPrompt=false, value='', placeholder='', okText='Confirmar', cancelText='Cancelar', danger=false }){
+  return new Promise(resolve => {
+    document.querySelectorAll('.dlg-bg').forEach(x => x.remove());
+    const bg = document.createElement('div');
+    bg.className = 'modal-bg dlg-bg';
+    bg.innerHTML = `<div class="modal modal-sm"><div class="dlg-bd">
+      ${title ? `<h2>${esc(title)}</h2>` : ''}
+      ${message ? `<p class="dlg-msg">${esc(message)}</p>` : ''}
+      ${isPrompt ? `<input class="field dlg-input" type="text" placeholder="${esc(placeholder)}">` : ''}
+      <div class="dlg-actions">
+        <button class="btn btn-ghost dlg-cancel">${esc(cancelText)}</button>
+        <button class="btn dlg-ok${danger ? ' btn-danger' : ''}">${esc(okText)}</button>
+      </div>
+    </div></div>`;
+    document.body.appendChild(bg);
+    const input = bg.querySelector('.dlg-input');
+    if(input) input.value = value;
+    const finish = (val) => { document.removeEventListener('keydown', onKey); bg.remove(); resolve(val); };
+    const ok = () => finish(isPrompt ? (input ? input.value : '') : true);
+    const cancel = () => finish(isPrompt ? null : false);
+    bg.querySelector('.dlg-ok').addEventListener('click', ok);
+    bg.querySelector('.dlg-cancel').addEventListener('click', cancel);
+    bg.addEventListener('click', e => { if(e.target === bg) cancel(); });
+    const onKey = (e) => {
+      if(e.key === 'Escape'){ e.preventDefault(); cancel(); }
+      else if(e.key === 'Enter' && (!isPrompt || document.activeElement === input)){ e.preventDefault(); ok(); }
+    };
+    document.addEventListener('keydown', onKey);
+    setTimeout(() => { if(input){ input.focus(); input.select(); } else bg.querySelector('.dlg-ok').focus(); }, 40);
+  });
+}
+const uiConfirm = (message, opts={}) => uiDialog({ title: opts.title || 'Confirmar', message, okText: opts.okText || 'Confirmar', cancelText: opts.cancelText || 'Cancelar', danger: opts.danger });
+const uiPrompt = (label, value='', opts={}) => uiDialog({ title: opts.title || label, message: opts.title ? label : '', isPrompt: true, value, placeholder: opts.placeholder || '', okText: opts.okText || 'Salvar', cancelText: 'Cancelar' });
+
 const brlRange = (a,b) => (a==b||!b) ? brl(a) : `${brl(a)} a ${brl(b)}`;
 
 /* ---- sugestão de valor e desconto por lead (IA sob demanda) ---- */
@@ -2797,7 +2842,7 @@ async function saveLeadAutomation(){
   const niche=$('#niche').value.trim(), scope=$('#lead-scope').value, enabled=$('#lead-auto-enabled').checked;
   if(!niche) return toast('Diga o nicho antes de salvar a automação.',true);
   const current=S.leadAutomations[0];
-  if(enabled&&!current?.enabled&&!confirm('Ativar a busca recorrente? Cada rodada usa a API da Anthropic e pesquisa web.')){ $('#lead-auto-enabled').checked=false; return; }
+  if(enabled&&!current?.enabled&&!(await uiConfirm('Ativar a busca recorrente? Cada rodada usa a API da Anthropic e pesquisa web.', { okText:'Ativar' }))){ $('#lead-auto-enabled').checked=false; return; }
   const changed=!current||current.niche!==niche||current.scope!==scope||current.custom_region!==$('#uf').value.trim();
   const row={
     company_id:S.profile.company_id,created_by:S.user.id,niche,scope,custom_region:$('#uf').value.trim()||null,
@@ -2979,9 +3024,9 @@ function drawUsage(sel, used, limit, label){
 /* adicionar empresa ao pipeline */
 document.addEventListener('click', async e => {
   if(!e.target.closest('#pipe-add')) return;
-  const name = prompt('Nome da empresa em negociação:');
+  const name = await uiPrompt('Nome da empresa em negociação', '', { okText:'Adicionar' });
   if(!name?.trim()) return;
-  const valueRaw = prompt('Valor mensal estimado em R$ (opcional, só números):', '');
+  const valueRaw = await uiPrompt('Valor mensal estimado em R$ (opcional, só números)', '', { okText:'Salvar', placeholder:'ex: 2500' });
   const value_monthly = valueRaw && !isNaN(parseFloat(valueRaw.replace(',','.'))) ? parseFloat(valueRaw.replace(',','.')) : null;
   const { data, error } = await SB.from('leads').insert({
     company_id: S.profile.company_id, name: name.trim(), stage: 'novo', in_pipeline: true,
@@ -3023,7 +3068,7 @@ function openDealMenu(anchor){
 }
 async function dealAction(l, act){
   if(act === 'rename'){
-    const name = prompt('Novo nome da empresa:', l.name);
+    const name = await uiPrompt('Novo nome da empresa', l.name);
     if(!name?.trim() || name.trim() === l.name) return;
     const prev = l.name; l.name = name.trim();
     const { error } = await SB.from('leads').update({ name: l.name }).eq('id', l.id);
@@ -3031,7 +3076,7 @@ async function dealAction(l, act){
     paintBoard(); paintLeads($('#niche')?.value.trim()); return toast('Nome atualizado.');
   }
   if(act === 'value'){
-    const raw = prompt('Valor mensal em R$ (só números):', l.value_monthly != null ? String(l.value_monthly) : '');
+    const raw = await uiPrompt('Valor mensal em R$ (só números)', l.value_monthly != null ? String(l.value_monthly) : '', { placeholder:'ex: 2500' });
     if(raw === null) return;
     const clean = raw.trim();
     const v = clean === '' ? null : parseFloat(clean.replace(/[^\d,.-]/g,'').replace(',','.'));
@@ -3042,7 +3087,7 @@ async function dealAction(l, act){
     paintBoard(); return toast('Valor atualizado.');
   }
   if(act === 'date'){
-    const raw = prompt('Data limite (dd/mm/aaaa). Deixe vazio para remover:', l.due_date ? dmy(l.due_date) : '');
+    const raw = await uiPrompt('Data limite (dd/mm/aaaa). Deixe vazio para remover', l.due_date ? dmy(l.due_date) : '', { placeholder:'dd/mm/aaaa' });
     if(raw === null) return;
     let iso = null;
     if(raw.trim()){
@@ -3064,7 +3109,7 @@ async function dealAction(l, act){
     paintBoard(); pipeCounts(); return toast(`${l.name} saiu do pipeline.`);
   }
   if(act === 'del'){
-    if(!confirm(`Excluir "${l.name}" de vez? Isso apaga o lead da lista também.`)) return;
+    if(!await uiConfirm(`Excluir "${l.name}" de vez? Isso apaga o lead da lista também.`, { okText:'Excluir', danger:true })) return;
     const { error } = await SB.from('leads').delete().eq('id', l.id);
     if(error) return toast(error.message, true);
     S.leads = S.leads.filter(x => x.id !== l.id);
@@ -3130,7 +3175,7 @@ function paintProjects(){
   }));
 
   $('#new-proj').addEventListener('click', async () => {
-    const name = prompt('Nome do projeto:');
+    const name = await uiPrompt('Nome do projeto', '', { okText:'Criar' });
     if(!name) return;
     const { data, error } = await SB.from('projects')
       .insert({ company_id: S.profile.company_id, name, description: '' }).select().maybeSingle();
@@ -3237,7 +3282,7 @@ $('#learn-now').addEventListener('click',async()=>{
 });
 document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-memory-del]');if(!b)return;
-  const memory=S.memories.find(m=>m.id===b.dataset.memoryDel);if(!memory||!confirm(`Apagar esta memória?\n\n${memory.content}`))return;
+  const memory=S.memories.find(m=>m.id===b.dataset.memoryDel);if(!memory)return;if(!await uiConfirm(`Apagar esta memória?\n\n${memory.content}`, { okText:'Apagar', danger:true }))return;
   b.disabled=true;const {error}=await SB.from('ai_memories').delete().eq('id',memory.id);
   if(error){b.disabled=false;return toast(error.message,true);}S.memories=S.memories.filter(m=>m.id!==memory.id);paintLearning();toast('Memória apagada.');
 });
@@ -3460,7 +3505,7 @@ $('#kb-file-in').addEventListener('change', async e => {
 
 document.addEventListener('click', async e => {
   const b=e.target.closest('[data-kb-del]'); if(!b) return;
-  const f=S.files.find(x=>x.id===b.dataset.kbDel); if(!f || !confirm(`Remover "${f.name}" da base da IA?`)) return;
+  const f=S.files.find(x=>x.id===b.dataset.kbDel); if(!f) return; if(!await uiConfirm(`Remover "${f.name}" da base da IA?`, { okText:'Remover', danger:true })) return;
   b.disabled=true;
   if(f.storage_path){ const {error}=await SB.storage.from(FILE_BUCKET).remove([f.storage_path]); if(error){ b.disabled=false; return toast(error.message,true); } }
   const {error}=await SB.from('files').delete().eq('id',f.id);
@@ -3563,7 +3608,7 @@ document.addEventListener('click', async e => {
 
 document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-answer-teach]');if(!b)return;
-  const memory=prompt('O que a Velu deve lembrar ou corrigir para as próximas conversas?');
+  const memory=await uiPrompt('O que a Velu deve lembrar ou corrigir para as próximas conversas?', '', { okText:'Ensinar' });
   if(!memory?.trim())return;b.disabled=true;
   try{await callLearning({remember:memory.trim(),category:'correction',source_message_id:b.dataset.answerTeach});}
   catch(error){toast(error.message,true);}finally{b.disabled=false;}
@@ -4005,7 +4050,7 @@ async function exportVideo(){
   if(!videoReady())return toast('Carregue um vídeo primeiro.',true);
   if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream)return toast('Seu navegador não oferece exportação local. Use Chrome ou Edge atual.',true);
   const clipDuration=(S.video.end-S.video.start)/Number($('#video-speed').value);
-  if(clipDuration>900&&!confirm('O trecho tem mais de 15 minutos e a renderização acontece em tempo real. Continuar?'))return;
+  if(clipDuration>900&&!(await uiConfirm('O trecho tem mais de 15 minutos e a renderização acontece em tempo real. Continuar?', { okText:'Continuar' })))return;
   const mime=VIDEO_TYPES.find(type=>MediaRecorder.isTypeSupported(type))||'';
   const extension=mime.startsWith('video/mp4')?'mp4':'webm';
   const btn=$('#video-export'),bar=$('#video-export-bar'),status=$('#video-export-status'),old=btn.innerHTML;
