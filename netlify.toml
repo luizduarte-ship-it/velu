@@ -3,3 +3,19 @@
 [build]
   command = "mkdir -p dist && cp index.html dist/index.html"
   publish = "dist"
+
+# Consolida o www no dominio principal (evita certificado/host separado).
+[[redirects]]
+  from = "https://www.velucrm.com/*"
+  to = "https://velucrm.com/:splat"
+  status = 301
+  force = true
+
+# Seguranca: obriga o navegador a usar sempre HTTPS neste dominio e reduz
+# avisos de "nao segura". So faz efeito apos a primeira visita por https.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Strict-Transport-Security = "max-age=31536000"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
