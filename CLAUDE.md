@@ -64,8 +64,13 @@ Repo enxuto, sem build no frontend. Atualizar esta lista quando algo mudar:
   "credit balance too low" (a funcao devolve mensagem amigavel).
 - **chat:** o cerebro da IA (modo empresa/livre/code, memoria, skills, arquivos,
   streaming da Anthropic com busca web). **learn:** memoria continua
-  (ai_memories). **profile-company, analyze, image, video-assist,
-  lead-worker (cron).**
+  (ai_memories). **profile-company, analyze, image, video-assist.**
+- **lead-worker (cron):** prospeccao automatica HIBRIDA. O CNPJa puxa a lista
+  real da Receita (sem Claude) e o Claude qualifica os candidatos ja verificados
+  (sinal de compra, evidencia, encaixe), com teto de buscas. Se o Claude falhar
+  ou estiver sem credito, salva os leads do CNPJa com o score base (nao derruba a
+  rodada). Logica compartilhada em `leads-shared.ts` (searchHybridLeads,
+  savePublicLeads). Sem JWT: valida o segredo `x-velu-worker-secret` (Vault).
 - `cnpj-probe` e `ai-probe` sao sondas de teste desativadas (retornam 410/403);
   podem ser removidas pelo painel do Supabase.
 
