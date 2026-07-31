@@ -912,6 +912,13 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 .video-title{font-size:clamp(18px,3.6vw,44px);font-weight:700;line-height:1.08;color:#fff;max-width:90%;overflow-wrap:anywhere}
 .video-subtitle{font-size:clamp(11px,1.7vw,20px);font-weight:600;line-height:1.35;color:#fff;margin-top:8px;max-width:86%;overflow-wrap:anywhere}
 .video-caption{font-size:clamp(11px,1.65vw,20px);font-weight:700;line-height:1.35;background:rgba(5,8,13,.76);color:#fff;border-radius:6px;padding:5px 9px;margin-top:12px;max-width:88%}
+.video-caption.style-outline{background:transparent;padding:0;text-shadow:0 2px 10px rgba(0,0,0,.95),0 0 3px rgba(0,0,0,.95)}
+.video-caption.style-highlight{background:var(--brand);color:#fff;box-shadow:0 3px 12px rgba(17,108,254,.4);text-transform:uppercase;letter-spacing:.3px}
+.video-progress-preview{position:absolute;left:0;right:0;bottom:0;height:5px;background:rgba(255,255,255,.22);pointer-events:none;z-index:3}
+.video-progress-preview span{display:block;height:100%;width:0;background:var(--brand)}
+.video-fade-preview{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:2;transition:opacity .08s linear}
+.video-toggle{display:flex;align-items:center;gap:9px;margin-top:12px;cursor:pointer;font-size:12.5px;color:var(--tx-2)}
+.video-toggle input{width:16px;height:16px;accent-color:var(--brand);cursor:pointer;flex:none}
 .video-panel{overflow:hidden;position:sticky;top:70px}
 .video-tabs{display:flex;overflow-x:auto;border-bottom:1px solid var(--line);scrollbar-width:none}
 .video-tabs::-webkit-scrollbar{display:none}
@@ -1390,6 +1397,8 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
                 <div class="video-subtitle" id="video-subtitle-preview"></div>
                 <div class="video-caption" id="video-caption-preview" style="display:none"></div>
               </div>
+              <div class="video-fade-preview" id="video-fade-preview"></div>
+              <div class="video-progress-preview" id="video-progress-preview" style="display:none"><span></span></div>
             </div>
           </div>
 
@@ -1426,14 +1435,19 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
               <div class="video-control"><div class="video-control-head"><span>Brilho</span><output id="video-brightness-out">100%</output></div><input id="video-brightness" type="range" min="50" max="150" value="100"></div>
               <div class="video-control"><div class="video-control-head"><span>Contraste</span><output id="video-contrast-out">100%</output></div><input id="video-contrast" type="range" min="50" max="160" value="100"></div>
               <div class="video-control"><div class="video-control-head"><span>Saturação</span><output id="video-saturation-out">100%</output></div><input id="video-saturation" type="range" min="0" max="180" value="100"></div>
+              <label class="video-toggle" for="video-progressbar"><input type="checkbox" id="video-progressbar"><span>Barra de progresso no vídeo</span></label>
+              <label class="video-toggle" for="video-fade"><input type="checkbox" id="video-fade"><span>Fade de abertura e encerramento</span></label>
             </div>
 
             <div class="video-pane" id="video-pane-captions">
-              <h3>Legendas</h3><p>Importe um arquivo .srt. As legendas aparecem na prévia e são gravadas no vídeo exportado.</p>
+              <h3>Legendas</h3><p>Gere as legendas a partir do roteiro ou importe um .srt. Elas aparecem na prévia e são gravadas no vídeo exportado.</p>
+              <div class="video-control"><label class="lbl" for="video-captions-text">Legenda automática a partir do texto</label><textarea class="field" id="video-captions-text" data-max-height="160" placeholder="Cole aqui a fala ou o roteiro do vídeo. O editor divide em blocos com tempo, espalhados pelo trecho selecionado."></textarea></div>
+              <button class="btn btn-ghost" id="video-captions-gen" style="width:100%"><svg class="i i-sm"><use href="#ic-sparkles"/></svg>Gerar legendas do texto</button>
               <input type="file" id="video-srt-in" hidden accept=".srt,text/plain,application/x-subrip">
-              <button class="btn btn-ghost" id="video-srt-open" style="width:100%"><svg class="i i-sm"><use href="#ic-file"/></svg>Importar legenda .srt</button>
+              <button class="btn btn-ghost" id="video-srt-open" style="width:100%;margin-top:8px"><svg class="i i-sm"><use href="#ic-file"/></svg>Importar legenda .srt</button>
               <div class="memory-status" id="video-srt-status" style="margin-top:10px">Nenhuma legenda importada.</div>
-              <div class="video-control" style="margin-top:14px"><div class="video-control-head"><span>Tamanho da legenda</span><output id="video-caption-size-out">100%</output></div><input id="video-caption-size" type="range" min="70" max="150" value="100"></div>
+              <div class="video-control" style="margin-top:14px"><label class="lbl" for="video-caption-style">Estilo da legenda</label><select class="field" id="video-caption-style"><option value="box">Caixa</option><option value="outline">Contorno</option><option value="highlight">Destaque</option></select></div>
+              <div class="video-control"><div class="video-control-head"><span>Tamanho da legenda</span><output id="video-caption-size-out">100%</output></div><input id="video-caption-size" type="range" min="70" max="150" value="100"></div>
             </div>
 
             <div class="video-pane" id="video-pane-ai">
@@ -1930,7 +1944,7 @@ const S = { user:null, profile:null, co:null, rivals:[], prompts:[], projects:[]
             leads:[], files:[], team:[], niches:[], convo:null, busy:false, mode:'empresa', rafPending:false,
             pendingFiles:[], areaFiles:{rival:[],leads:[],code:[],videoai:[]}, answerCache:new Map(),
             leadAutomations:[], leadRuns:[], learning:null, memories:[],
-            video:{file:null,url:null,duration:0,start:0,end:0,aspect:'original',captions:[],exporting:false,recorder:null,cancel:false} };
+            video:{file:null,url:null,duration:0,start:0,end:0,aspect:'original',captions:[],captionStyle:'box',progressBar:false,fade:false,exporting:false,recorder:null,cancel:false} };
 
 const $  = s => document.querySelector(s);
 const esc = t => (t ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -3970,7 +3984,61 @@ function captionAt(time){return S.video.captions.find(c=>time>=c.start&&time<=c.
 function updateVideoCaption(){
   const caption=captionAt(videoEl.currentTime),el=$('#video-caption-preview');
   el.textContent=caption;el.style.display=caption?'':'none';
+  el.classList.remove('style-box','style-outline','style-highlight');
+  el.classList.add('style-'+(S.video.captionStyle||'box'));
 }
+function fadeAlpha(time,start,end){
+  const d=0.6;
+  if(time<start+d)return clamp(1-(time-start)/d,0,1);
+  if(time>end-d)return clamp(1-(end-time)/d,0,1);
+  return 0;
+}
+function updateVideoDynamic(time){
+  const start=videoReady()?S.video.start:0,end=videoReady()?S.video.end:0,span=Math.max(0.1,end-start);
+  const bar=$('#video-progress-preview');
+  if(S.video.progressBar&&videoReady()){bar.style.display='';bar.firstElementChild.style.width=(clamp((time-start)/span,0,1)*100)+'%';}
+  else bar.style.display='none';
+  const fade=$('#video-fade-preview');
+  fade.style.opacity=(S.video.fade&&videoReady())?String(fadeAlpha(time,start,end)):'0';
+}
+// legenda automatica: quebra o texto em blocos curtos e distribui pelo trecho selecionado
+function chunkCaptionText(text){
+  const clean=String(text||'').replace(/\s+/g,' ').trim();if(!clean)return [];
+  const parts=clean.match(/[^.!?…]+[.!?…]?/g)||[clean],maxChars=42,cues=[];
+  for(let piece of parts){
+    piece=piece.trim();if(!piece)continue;
+    let line='';
+    for(const word of piece.split(' ')){
+      const test=line?line+' '+word:word;
+      if(test.length>maxChars&&line){cues.push(line);line=word;}else line=test;
+    }
+    if(line)cues.push(line);
+  }
+  return cues;
+}
+function generateCaptionsFromText(text){
+  const cues=chunkCaptionText(text);if(!cues.length)return [];
+  const start=videoReady()?S.video.start:0,end=videoReady()?S.video.end:cues.length*2.2,span=Math.max(0.5,end-start);
+  const weights=cues.map(c=>Math.max(6,c.length)),total=weights.reduce((a,b)=>a+b,0);
+  let t=start;const out=[];
+  for(let i=0;i<cues.length;i++){
+    const dur=Math.max(0.8,span*weights[i]/total),cEnd=Math.min(end,t+dur);
+    out.push({start:t,end:cEnd>t?cEnd:t+0.8,text:cues[i]});t=cEnd;
+  }
+  return out;
+}
+$('#video-captions-gen').addEventListener('click',()=>{
+  const text=$('#video-captions-text').value.trim();
+  if(!text)return toast('Cole o texto ou roteiro para gerar as legendas.',true);
+  if(!videoReady())return toast('Carregue um vídeo primeiro.',true);
+  const captions=generateCaptionsFromText(text);
+  if(!captions.length)return toast('Não consegui gerar legendas desse texto.',true);
+  S.video.captions=captions;$('#video-srt-status').textContent=`${captions.length} legenda(s) geradas do texto.`;
+  updateVideoCaption();toast('Legendas geradas.');
+});
+$('#video-caption-style').addEventListener('change',()=>{S.video.captionStyle=$('#video-caption-style').value;updateVideoCaption();});
+$('#video-progressbar').addEventListener('change',()=>{S.video.progressBar=$('#video-progressbar').checked;updateVideoDynamic(videoEl.currentTime);});
+$('#video-fade').addEventListener('change',()=>{S.video.fade=$('#video-fade').checked;updateVideoDynamic(videoEl.currentTime);});
 $('#video-srt-open').addEventListener('click',()=>$('#video-srt-in').click());
 $('#video-srt-in').addEventListener('change',async e=>{
   const file=e.target.files?.[0];e.target.value='';if(!file)return;
@@ -3980,7 +4048,7 @@ $('#video-srt-in').addEventListener('change',async e=>{
   }catch(error){toast(error.message,true);}
 });
 videoEl.addEventListener('timeupdate',()=>{
-  $('#video-current').textContent=videoTime(videoEl.currentTime);updateVideoCaption();
+  $('#video-current').textContent=videoTime(videoEl.currentTime);updateVideoCaption();updateVideoDynamic(videoEl.currentTime);
   if(videoReady()&&!videoEl.paused&&videoEl.currentTime>=S.video.end){videoEl.pause();videoEl.currentTime=S.video.start;}
 });
 videoEl.addEventListener('play',()=>{if(videoReady()&&(videoEl.currentTime<S.video.start||videoEl.currentTime>=S.video.end))videoEl.currentTime=S.video.start;videoEl.playbackRate=Number($('#video-speed').value);});
@@ -4031,10 +4099,11 @@ function wrapCanvasText(ctx,text,maxWidth){
 }
 function paintCanvasText(ctx,text,y,font,maxWidth,lineHeight,background=false){
   if(!text)return y;ctx.font=font;ctx.textAlign='center';ctx.textBaseline='middle';
+  const mode=background===true?'box':(background||'none');
   const lines=wrapCanvasText(ctx,text,maxWidth),total=lines.length*lineHeight,start=y-total/2+lineHeight/2;
   for(const [index,line] of lines.entries()){
     const lineY=start+index*lineHeight;
-    if(background){const width=Math.min(maxWidth,ctx.measureText(line).width+lineHeight);ctx.fillStyle='rgba(5,8,13,.78)';ctx.beginPath();if(ctx.roundRect)ctx.roundRect((ctx.canvas.width-width)/2,lineY-lineHeight*.5,width,lineHeight,Math.max(5,lineHeight*.15));else ctx.rect((ctx.canvas.width-width)/2,lineY-lineHeight*.5,width,lineHeight);ctx.fill();}
+    if(mode!=='none'){const width=Math.min(maxWidth,ctx.measureText(line).width+lineHeight);ctx.fillStyle=mode==='highlight'?'rgba(17,108,254,.94)':'rgba(5,8,13,.78)';ctx.beginPath();if(ctx.roundRect)ctx.roundRect((ctx.canvas.width-width)/2,lineY-lineHeight*.5,width,lineHeight,Math.max(5,lineHeight*.15));else ctx.rect((ctx.canvas.width-width)/2,lineY-lineHeight*.5,width,lineHeight);ctx.fill();}
     ctx.fillStyle='#fff';ctx.strokeStyle='rgba(0,0,0,.8)';ctx.lineWidth=Math.max(2,lineHeight*.07);ctx.strokeText(line,ctx.canvas.width/2,lineY,maxWidth);ctx.fillText(line,ctx.canvas.width/2,lineY,maxWidth);
   }
   return start+total;
@@ -4051,7 +4120,9 @@ function drawVideoCanvas(ctx,source,currentTime){
   if(title)center=paintCanvasText(ctx,title,center,`700 ${titleSize}px Montserrat, sans-serif`,cw*.86,titleSize*1.16,false);
   if(subtitle)paintCanvasText(ctx,subtitle,center+subSize*.9,`600 ${subSize}px Montserrat, sans-serif`,cw*.84,subSize*1.3,false);
   const caption=captionAt(currentTime);
-  if(caption){const size=Math.round(ch*.029*Number($('#video-caption-size').value)/100);paintCanvasText(ctx,caption,ch-margin*.42,`700 ${size}px Montserrat, sans-serif`,cw*.86,size*1.45,true);}
+  if(caption){const size=Math.round(ch*.029*Number($('#video-caption-size').value)/100),style=S.video.captionStyle||'box';paintCanvasText(ctx,caption,ch-margin*.42,`700 ${size}px Montserrat, sans-serif`,cw*.86,size*1.45,style==='outline'?'none':style==='highlight'?'highlight':'box');}
+  if(S.video.progressBar){const span=Math.max(0.1,S.video.end-S.video.start),p=clamp((currentTime-S.video.start)/span,0,1),bh=Math.max(3,Math.round(ch*.008));ctx.fillStyle='rgba(255,255,255,.25)';ctx.fillRect(0,ch-bh,cw,bh);ctx.fillStyle='#116cfe';ctx.fillRect(0,ch-bh,cw*p,bh);}
+  if(S.video.fade){const a=fadeAlpha(currentTime,S.video.start,S.video.end);if(a>0){ctx.fillStyle=`rgba(0,0,0,${a})`;ctx.fillRect(0,0,cw,ch);}}
   ctx.restore();
 }
 const waitMedia=(media,event)=>new Promise((resolve,reject)=>{const ok=()=>{cleanup();resolve();},bad=()=>{cleanup();reject(new Error('Não consegui preparar o vídeo para exportação.'));},cleanup=()=>{media.removeEventListener(event,ok);media.removeEventListener('error',bad);};media.addEventListener(event,ok,{once:true});media.addEventListener('error',bad,{once:true});});
