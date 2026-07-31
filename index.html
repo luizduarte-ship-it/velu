@@ -1169,7 +1169,7 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
             <input type="file" id="chat-file-in" hidden multiple accept=".pdf,.docx,.xlsx,.xls,.csv,.txt,.md,.json,.html,.xml,.rtf,.pptx,.png,.jpg,.jpeg,.webp,.gif">
             <button class="btn-ico" id="attach-file" title="Anexar arquivos"><svg class="i"><use href="#ic-clip"/></svg></button>
             <button class="btn-ico" id="voice-input" title="Escrever por voz" aria-label="Escrever por voz" aria-pressed="false"><svg class="i"><use href="#ic-mic"/></svg></button>
-            <button class="btn-ico" id="open-skills" title="Ativar skills nesta conversa"><svg class="i"><use href="#ic-plug"/></svg></button>
+            <button class="btn-ico" id="open-skills" title="Focar em skills específicas (todas já vêm ativas)"><svg class="i"><use href="#ic-plug"/></svg></button>
             <button class="send" aria-label="Enviar"><svg class="i"><use href="#ic-arrow-up"/></svg></button>
           </div>
           <p style="font-size:10.5px;color:var(--tx-4);margin:7px 4px 0">Enter envia · Shift + Enter quebra a linha · o microfone escreve por voz.</p>
@@ -1611,7 +1611,7 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
         <div class="page-hd">
           <span class="eyebrow">Inteligência</span>
           <h1>Skills</h1>
-          <p class="lead">Skills são blocos de conhecimento que a Velu aplica na resposta. Agora ela escolhe sozinha: ao mandar uma pergunta no chat, o sistema identifica a necessidade e ativa as skills relevantes automaticamente. Você pode ligar ou desligar skills aqui embaixo para forçar ou limitar o que ela usa.</p>
+          <p class="lead">Skills são blocos de conhecimento que a Velu aplica na resposta. Por padrão, todas as skills já ficam ativas em toda conversa, você não precisa ligar nada. Se quiser, ative uma ou mais aqui embaixo para focar só nelas naquela conversa (o resto fica de fora enquanto houver alguma selecionada).</p>
         </div>
         <div class="filters" id="skill-filters" style="margin-bottom:20px"></div>
         <div class="skill-grid" id="skill-grid"></div>
@@ -3822,8 +3822,8 @@ async function loadSkills(){
 function paintActiveSkillsBar(){
   const active = S.skills.filter(sk => S.activeSkills.has(sk.id));
   $('#active-skills').innerHTML = active.length
-    ? active.map(sk => `<span class="skill-chip">${ico('sparkles','i i-sm')}${esc(sk.name)}<button data-toggle="${sk.id}" title="Desativar">×</button></span>`).join('')
-    : '';
+    ? active.map(sk => `<span class="skill-chip">${ico('sparkles','i i-sm')}${esc(sk.name)}<button data-toggle="${sk.id}" title="Deixar de focar">×</button></span>`).join('')
+    : `<span style="font-size:11px;color:var(--tx-3);display:inline-flex;align-items:center;gap:5px">${ico('sparkles','i i-sm')}Todas as skills ativas</span>`;
   document.querySelectorAll('[data-toggle]').forEach(b =>
     b.addEventListener('click', () => toggleSkill(b.dataset.toggle)));
 }
@@ -3848,15 +3848,18 @@ function paintSkills(cat){
     `<button class="chip" data-scat="${esc(c)}" aria-pressed="${c===cat}">${esc(c)}</button>`).join('');
   document.querySelectorAll('[data-scat]').forEach(b =>
     b.addEventListener('click', () => paintSkills(b.dataset.scat)));
+  const focus = S.activeSkills.size > 0;
   const list = cat === 'Todas' ? S.skills : S.skills.filter(s => s.category === cat);
   $('#skill-grid').innerHTML = list.length
     ? list.map(s => {
-      const on = S.activeSkills.has(s.id);
+      const sel = S.activeSkills.has(s.id);
+      const on = focus ? sel : true; // sem seleção, todas ficam ativas por padrão
+      const label = focus ? (sel ? 'Focada nesta conversa' : 'Focar nesta conversa') : 'Ativa por padrão';
       return `<button class="skill ${on?'on':''}" data-skill="${s.id}">
         <div class="skill-c">${esc(s.category ?? '–')}</div>
         <div class="skill-n">${esc(s.name)}</div>
         <div class="skill-d">${esc(s.description ?? '')}</div>
-        <div class="skill-t"><span class="dot"></span>${on ? 'Ativada' : 'Ativar nesta conversa'}</div>
+        <div class="skill-t"><span class="dot"></span>${label}</div>
       </button>`;
     }).join('')
     : `<p style="color:var(--tx-3);grid-column:1/-1;text-align:center;padding:30px">Nenhuma skill nesta categoria.</p>`;
