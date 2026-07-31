@@ -524,12 +524,7 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 .lead-check{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;color:var(--tx-2);font-weight:500;cursor:pointer}
 .lead-check input{accent-color:var(--brand)}
 .lead-options .btn{margin-left:auto}
-.lead-auto{margin-top:14px;padding:13px 14px;background:var(--void);border:1px solid var(--line);border-radius:9px;display:grid;grid-template-columns:minmax(220px,1fr) auto auto auto;gap:10px;align-items:center}
-.lead-auto-copy b{display:block;font-size:12.5px;margin-bottom:2px}
-.lead-auto-copy span,.lead-note,.lead-auto-status{font-size:10.5px;line-height:1.5;color:var(--tx-3)}
-.lead-auto-status{grid-column:1/-1;padding-top:8px;border-top:1px solid var(--line)}
-.lead-auto-status.ready{color:var(--up)}
-.lead-auto-status.failed{color:var(--dn)}
+.lead-note{font-size:10.5px;line-height:1.5;color:var(--tx-3)}
 .lead-contact{display:flex;flex-direction:column;gap:2px;font-size:10.5px;color:var(--tx-3);overflow:hidden}
 .lead-contact a{color:var(--brand-lift);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lead-contact a:hover{text-decoration:underline}
@@ -550,7 +545,7 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 .lead-progress .u-bar{flex:0 0 220px;max-width:100%;height:8px;background:var(--void);border:1px solid var(--line);border-radius:100px;overflow:hidden}
 .lead-progress .u-bar>span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--brand-lift));transition:width .4s var(--ease)}
 .lead-progress b{color:var(--tx);font-size:12.5px}
-@media(max-width:900px){.lead-auto{grid-template-columns:1fr 1fr}.lead-auto-copy{grid-column:1/-1}.lead-options .btn{margin-left:0}}
+@media(max-width:900px){.lead-options .btn{margin-left:0}}
 
 /* ============================================================ DECKS / PROMPTS / PROJETOS ============================================================ */
 .grid-3{display:grid;grid-template-columns:repeat(auto-fill,minmax(224px,1fr));gap:14px}
@@ -1294,13 +1289,6 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
             <b id="lead-progress-txt" class="num">0 / 0</b>
             <span id="lead-progress-label" style="font-size:11.5px;color:var(--tx-3);flex:1;min-width:80px"></span>
             <button class="btn btn-ghost btn-sm" id="lead-abort"><svg class="i i-sm"><use href="#ic-x"/></svg>Abortar</button>
-          </div>
-          <div class="lead-auto">
-            <div class="lead-auto-copy"><b>Busca automática nacional</b><span>Quando ligada, percorre os estados em rodízio e acumula leads sem repetir.</span></div>
-            <label class="lead-check"><input type="checkbox" id="lead-auto-enabled"> ativada</label>
-            <select class="field" id="lead-interval" style="min-width:138px"><option value="6">a cada 6 horas</option><option value="12">a cada 12 horas</option><option value="24">uma vez por dia</option><option value="168">uma vez por semana</option></select>
-            <button class="btn btn-ghost btn-sm" id="lead-auto-save">Salvar automação</button>
-            <div class="lead-auto-status" id="lead-auto-status">Automação ainda não configurada.</div>
           </div>
           <p class="lead-note" style="margin-top:10px">Importante: dados de CNPJ e CNAE indicam aderência ao setor buscado; não provam que a empresa já comprou ou contratou algo. A Velu separa esse indício de compras ou contratos realmente publicados.</p>
         </div>
@@ -2813,6 +2801,8 @@ async function suggestPrice(l){
 const LEAD_FN = 'https://hjtdkfrlogktvmkeauwf.supabase.co/functions/v1/find-leads';
 
 function paintLeadAutomation(){
+  // A busca automatica foi removida (evita gasto de credito). Mantemos so o
+  // pre-preenchimento do nicho/regiao caso exista alguma configuracao antiga.
   const a=S.leadAutomations[0];
   if(a){
     $('#niche').value=a.niche||$('#niche').value;
@@ -2821,19 +2811,7 @@ function paintLeadAutomation(){
     $('#lead-phone').checked=a.require_phone!==false;
     $('#lead-email').checked=a.require_email!==false;
     $('#lead-target').value=String(a.target_per_run||12);
-    $('#lead-auto-enabled').checked=Boolean(a.enabled);
-    $('#lead-interval').value=String(a.interval_hours||6);
   }
-  const status=$('#lead-auto-status'); if(!status) return;
-  status.className='lead-auto-status';
-  if(!a){ status.textContent='Automação ainda não configurada.'; return; }
-  const states=Array.isArray(a.states)&&a.states.length?a.states:leadStatesFor(a.scope||'BR');
-  const next=states[(Number(a.state_cursor)||0)%states.length];
-  if(a.last_status==='failed') status.classList.add('failed');
-  else if(a.enabled) status.classList.add('ready');
-  status.textContent=a.enabled
-    ? `Ativa · próximo estado: ${LEAD_STATE_NAMES[next]||next} · próxima rodada ${a.next_run_at?new Date(a.next_run_at).toLocaleString('pt-BR'):'em breve'} · ${a.total_generated||0} novos acumulados.`
-    : `Pausada · ${a.total_generated||0} novos leads já acumulados.${a.last_error?' Último erro: '+a.last_error:''}`;
 }
 
 async function refreshLeadData(){
@@ -2862,26 +2840,6 @@ function exportLeadsCsv(){
   const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');
   a.href=url; a.download=`velu-leads-${(niche||'todos').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase()}.csv`;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000); toast(`${rows.length} leads exportados.`);
-}
-
-async function saveLeadAutomation(){
-  const niche=$('#niche').value.trim(), scope=$('#lead-scope').value, enabled=$('#lead-auto-enabled').checked;
-  if(!niche) return toast('Diga o nicho antes de salvar a automação.',true);
-  const current=S.leadAutomations[0];
-  if(enabled&&!current?.enabled&&!(await uiConfirm('Ativar a busca recorrente? Cada rodada usa a API da Anthropic e pesquisa web.', { okText:'Ativar' }))){ $('#lead-auto-enabled').checked=false; return; }
-  const changed=!current||current.niche!==niche||current.scope!==scope||current.custom_region!==$('#uf').value.trim();
-  const row={
-    company_id:S.profile.company_id,created_by:S.user.id,niche,scope,custom_region:$('#uf').value.trim()||null,
-    states:leadStatesFor(scope),require_phone:$('#lead-phone').checked,require_email:$('#lead-email').checked,
-    target_per_run:Number($('#lead-target').value),interval_hours:Number($('#lead-interval').value),enabled,
-    state_cursor:changed?0:(current?.state_cursor||0),next_run_at:enabled&&(!current?.enabled||changed)?new Date().toISOString():(enabled?(current?.next_run_at||new Date().toISOString()):null),
-    last_status:enabled?'queued':'paused',updated_at:new Date().toISOString()
-  };
-  const btn=$('#lead-auto-save'); btn.disabled=true; btn.textContent='Salvando…';
-  const {data,error}=await SB.from('lead_automations').upsert(row,{onConflict:'company_id'}).select().maybeSingle();
-  btn.disabled=false; btn.textContent='Salvar automação';
-  if(error) return toast(error.message,true);
-  S.leadAutomations=data?[data]:[]; paintLeadAutomation(); toast(enabled?'Automação ativada.':'Automação pausada.');
 }
 
 /* estados a enviar ao backend: BR = sem filtro (nacional) */
@@ -2967,7 +2925,6 @@ $('#lead-recommend').addEventListener('click', recommendLeads);
 $('#lead-abort').addEventListener('click', () => { leadAbort = true; $('#lead-progress-label').textContent = 'parando…'; });
 $('#lead-goal').addEventListener('input', e => $('#lead-goal-val').textContent = e.target.value);
 $('#lead-export').addEventListener('click',exportLeadsCsv);
-$('#lead-auto-save').addEventListener('click',saveLeadAutomation);
 $('#niche').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();findLeads();}});
 $('#uf').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();findLeads();}});
 
