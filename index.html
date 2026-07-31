@@ -1461,6 +1461,7 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
                 <button class="btn" id="video-ai-go" style="flex:1"><svg class="i i-sm"><use href="#ic-sparkles"/></svg>Montar plano de edição</button>
               </div>
               <div class="video-ai-result" id="video-ai-result"></div>
+              <button class="btn btn-ghost" id="video-ai-to-captions" style="width:100%;margin-top:8px;display:none"><svg class="i i-sm"><use href="#ic-file"/></svg>Usar como legenda</button>
             </div>
 
             <div class="video-pane" id="video-pane-export">
@@ -4073,12 +4074,31 @@ async function askVideoAI(){
     const {data:{session}}=await SB.auth.getSession();if(!session)throw new Error('Sua sessão expirou. Entre novamente.');
     const response=await fetch(VIDEO_ASSIST_FN,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},body:JSON.stringify({prompt,file_ids:uploaded.map(f=>f.id),video:videoBrief()})});
     const out=await response.json().catch(()=>({}));if(!response.ok)throw new Error(out.error||`Erro ${response.status}`);
-    result.innerHTML=md(out.plan);toast('Plano de edição pronto.');
+    result.innerHTML=md(out.plan);S.video.plan=out.plan||'';$('#video-ai-to-captions').style.display=S.video.plan.trim()?'':'none';toast('Plano de edição pronto.');
   }catch(error){result.innerHTML=`<span style="color:var(--dn)">${esc(error.message)}</span>`;toast(error.message,true);}
   finally{await cleanupTemporaryFiles(uploaded);btn.disabled=false;btn.innerHTML=old;}
 }
 $('#video-ai-go').addEventListener('click',askVideoAI);
 $('#video-ai-prompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();askVideoAI();}});
+function planToText(raw){
+  return String(raw||'')
+    .replace(/```[\s\S]*?```/g,' ').replace(/`([^`]*)`/g,'$1')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g,' ').replace(/\[([^\]]*)\]\([^)]*\)/g,'$1')
+    .replace(/^\s{0,3}#{1,6}\s*/gm,'').replace(/^\s*[-*+]\s+/gm,'').replace(/^\s*\d+\.\s+/gm,'')
+    .replace(/[*_>#]/g,'').replace(/\s+/g,' ').trim();
+}
+$('#video-ai-to-captions').addEventListener('click',()=>{
+  const text=planToText(S.video.plan);
+  if(!text)return toast('Não há plano para usar.',true);
+  $('#video-captions-text').value=text;
+  const tab=document.querySelector('[data-video-tab="captions"]');if(tab)tab.click();
+  if(typeof resizeSmartInput==='function')resizeSmartInput($('#video-captions-text'));
+  if(videoReady()){
+    const captions=generateCaptionsFromText(text);
+    if(captions.length){S.video.captions=captions;$('#video-srt-status').textContent=`${captions.length} legenda(s) geradas do plano da IA.`;updateVideoCaption();toast('Legendas geradas do plano.');return;}
+  }
+  toast('Texto levado para as legendas. Ajuste se quiser e clique em Gerar.');
+});
 
 function exportDimensions(){
   const quality=Number($('#video-resolution').value),aspect=S.video.aspect,sourceW=videoEl.videoWidth||1920,sourceH=videoEl.videoHeight||1080;
