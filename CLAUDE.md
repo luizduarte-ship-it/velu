@@ -65,12 +65,12 @@ Repo enxuto, sem build no frontend. Atualizar esta lista quando algo mudar:
 - **chat:** o cerebro da IA (modo empresa/livre/code, memoria, skills, arquivos,
   streaming da Anthropic com busca web). **learn:** memoria continua
   (ai_memories). **profile-company, analyze, image, video-assist.**
-- **lead-worker (cron):** prospeccao automatica HIBRIDA. O CNPJa puxa a lista
-  real da Receita (sem Claude) e o Claude qualifica os candidatos ja verificados
-  (sinal de compra, evidencia, encaixe), com teto de buscas. Se o Claude falhar
-  ou estiver sem credito, salva os leads do CNPJa com o score base (nao derruba a
-  rodada). Logica compartilhada em `leads-shared.ts` (searchHybridLeads,
-  savePublicLeads). Sem JWT: valida o segredo `x-velu-worker-secret` (Vault).
+- **lead-worker (cron):** DESATIVADO. A busca automatica de leads foi removida
+  (a UI de automacao saiu do frontend e o cron do pg_cron, jobid 1, esta com
+  active=false) para nao gastar credito Claude ao ser ativada. O codigo continua
+  no Supabase (modelo hibrido CNPJa + qualificacao Claude, com fallback, em
+  `leads-shared.ts`), mas nada o dispara. A busca MANUAL de leads (find-leads,
+  so CNPJa, sem Claude) segue ativa e e a unica forma de gerar leads.
 - `cnpj-probe` e `ai-probe` sao sondas de teste desativadas (retornam 410/403);
   podem ser removidas pelo painel do Supabase.
 
