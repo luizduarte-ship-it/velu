@@ -243,7 +243,7 @@ textarea.field{height:auto;min-height:84px;padding:9px 11px;resize:vertical;line
 .sales-foot a,.back-link{color:var(--brand-lift);font-weight:600;cursor:pointer;text-decoration:none}
 .back-link{display:inline-block;font-size:12px;margin-bottom:14px}
 /* --- onboarding (primeiro acesso) --- */
-#onboard{position:fixed;inset:0;z-index:200;background:var(--void);display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto}
+#onboard,#renew{position:fixed;inset:0;z-index:200;background:var(--void);display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto}
 .ob-card{width:100%;max-width:460px;background:var(--bg-2);border:1px solid var(--line);border-radius:16px;padding:34px 30px;box-shadow:var(--e2);margin:auto}
 .ob-step{display:none}
 .ob-step.on{display:block}
@@ -1205,6 +1205,20 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
   </div>
 </div>
 
+<!-- ==================== RENOVAÇÃO (assinatura vencida) ==================== -->
+<div id="renew" style="display:none">
+  <div class="ob-card" style="text-align:center">
+    <span class="eyebrow">Acesso pausado</span>
+    <h1>Sua assinatura venceu</h1>
+    <p class="ob-sub" id="renew-plan" style="font-weight:600;color:var(--tx)">Sua assinatura</p>
+    <p class="ob-sub" id="renew-when">Sua assinatura está vencida.</p>
+    <p class="ob-sub">Renove para voltar a usar a Velu com todos os seus dados, leads e conversas do jeito que você deixou.</p>
+    <button class="btn" id="renew-go" style="width:100%;margin-top:18px;height:44px">Renovar assinatura</button>
+    <button class="btn btn-ghost" id="renew-out" style="width:100%;margin-top:10px;height:40px">Sair</button>
+    <p class="ob-sub" style="margin-top:16px;font-size:12px">Dúvidas? Fale com a gente em contatovelucrm@gmail.com</p>
+  </div>
+</div>
+
 <!-- ==================== APP ==================== -->
 <div id="app">
 <div class="shell">
@@ -2150,8 +2164,31 @@ async function enter(){
   $('#login').style.display = 'none';
   $('#app').style.display = 'block';
   await boot();
+  if(!subAtiva(S.sub)){ mostrarRenovacao(); return; }
   if(S.co && S.co.onboarded === false){ startOnboarding(); return; }
   go('chat');
+}
+
+/* Assinatura ativa? Sem registro = nao bloqueia (empresas antigas foram migradas
+   com assinatura interna; se por algum motivo faltar, melhor deixar entrar do que
+   travar quem paga). Bloqueia so quando ha registro vencido ou inativo. */
+function subAtiva(sub){
+  if(!sub) return true;
+  const okStatus = sub.status === 'active' || sub.status === 'trialing';
+  const fim = sub.current_period_end ? new Date(sub.current_period_end).getTime() : Infinity;
+  return okStatus && fim > Date.now();
+}
+
+/* Bloqueio por vencimento: esconde o app e mostra a tela de renovacao. */
+function mostrarRenovacao(){
+  const nomePlano = { essencial:'Essencial', pro:'Pro', premium:'Premium' }[S.sub?.plan_slug] || '';
+  const fim = S.sub?.current_period_end ? new Date(S.sub.current_period_end) : null;
+  const dataFim = fim ? fim.toLocaleDateString('pt-BR') : '';
+  $('#app').style.display = 'none';
+  const el = $('#renew');
+  $('#renew-plan').textContent = nomePlano ? `Plano Velu ${nomePlano}` : 'Sua assinatura';
+  $('#renew-when').textContent = dataFim ? `Venceu em ${dataFim}.` : 'Sua assinatura está vencida.';
+  el.style.display = 'flex';
 }
 
 /* Onboarding de primeiro acesso: cria a senha e coleta o contexto da empresa. */
@@ -2206,6 +2243,15 @@ $('#logout').addEventListener('click', async () => {
   location.reload();
 });
 
+/* tela de renovação: o checkout embutido entra na próxima etapa; por ora orienta o cliente */
+$('#renew-go')?.addEventListener('click', async () => {
+  await uiConfirm('O pagamento pelo próprio site (cartão, Pix e boleto) está sendo finalizado. Enquanto isso, envie um e-mail para contatovelucrm@gmail.com que renovamos seu acesso na hora.', { okText:'Entendi', cancelText:'Fechar' });
+});
+$('#renew-out')?.addEventListener('click', async () => {
+  await SB.auth.signOut();
+  location.reload();
+});
+
 /* sessão viva: recarrega direto no app */
 SB.auth.getSession().then(({ data }) => {
   if(data.session){ S.user = data.session.user; enter(); }
@@ -2213,7 +2259,7 @@ SB.auth.getSession().then(({ data }) => {
 
 /* ============================================================ CARGA ============================================================ */
 async function boot(){
-  const [prof, co, rivals, prompts, projects, leads, files, team, convos, leadAutomations, leadRuns, learning, memories] = await Promise.all([
+  const [prof, co, rivals, prompts, projects, leads, files, team, convos, leadAutomations, leadRuns, learning, memories, sub] = await Promise.all([
     SB.from('profiles').select('display_name, company_id').eq('id', S.user.id).maybeSingle(),
     SB.from('companies').select('*').maybeSingle(),
     SB.from('competitors').select('*').order('threat', { ascending:false }),
@@ -2227,10 +2273,11 @@ async function boot(){
     SB.from('lead_runs').select('*').order('created_at', { ascending:false }).limit(10),
     SB.from('ai_learning_settings').select('*').maybeSingle(),
     SB.from('ai_memories').select('*').eq('active',true).order('updated_at',{ascending:false}).limit(100),
+    SB.from('subscriptions').select('status, current_period_end, plan_slug, provider').maybeSingle(),
   ]);
 
   if(prof.error || !prof.data){ toast('Seu usuário não está vinculado a uma empresa.', true); return; }
-  S.profile = prof.data; S.co = co.data;
+  S.profile = prof.data; S.co = co.data; S.sub = sub.data ?? null;
   S.rivals = rivals.data ?? []; S.prompts = prompts.data ?? []; S.projects = projects.data ?? [];
   S.leads = leads.data ?? []; S.files = files.data ?? []; S.team = team.data ?? [];
   S.leadAutomations = leadAutomations.data ?? []; S.leadRuns = leadRuns.data ?? [];
