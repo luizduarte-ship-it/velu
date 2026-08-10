@@ -2292,7 +2292,7 @@ $('#renew-out')?.addEventListener('click', async () => {
 const MP_PUBLIC_KEY = 'APP_USR-6bdf0181-3f96-43c4-811f-4215b1a60479';
 const CREATE_PAYMENT_FN = 'https://hjtdkfrlogktvmkeauwf.supabase.co/functions/v1/create-payment';
 const CHECKOUT_KEY = 'sb_publishable_ypvYT2pDW59CNxtgcUGA6w_cUNL-W0Q';
-const PLAN_LABELS = { essencial:'Essencial', pro:'Pro', premium:'Premium' };
+const PLAN_LABELS = { essencial:'Essencial', pro:'Pro', premium:'Premium', teste:'Teste (R$1)' };
 let mpInstance = null, brickController = null, coPlan = null, coAmount = 0, coLockEmail = false, coRenew = false;
 
 async function effectiveAmountCents(planSlug){
@@ -2307,7 +2307,7 @@ async function effectiveAmountCents(planSlug){
 function coStep(id){ ['co-data','co-pay','co-done'].forEach(s => $('#'+s).classList.toggle('on', s === id)); }
 
 async function openCheckout(planSlug, opts = {}){
-  if(!['essencial','pro','premium'].includes(planSlug)) planSlug = 'pro';
+  if(!['essencial','pro','premium','teste'].includes(planSlug)) planSlug = 'pro';
   coPlan = planSlug;
   coLockEmail = !!opts.lockEmail;
   coRenew = !!opts.lockEmail;
@@ -2442,9 +2442,12 @@ $('#co-done')?.addEventListener('click', async e => {
   }
 });
 
-/* sessão viva: recarrega direto no app */
+/* sessão viva: recarrega direto no app.
+   Link oculto de teste: velucrm.com/#teste abre o checkout do plano de R$1
+   (não aparece na vitrine; usado só para validar o pagamento ponta a ponta). */
 SB.auth.getSession().then(({ data }) => {
   if(data.session){ S.user = data.session.user; enter(); }
+  else if(location.hash === '#teste'){ openCheckout('teste'); }
 });
 
 /* ============================================================ CARGA ============================================================ */
