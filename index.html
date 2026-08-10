@@ -242,6 +242,13 @@ textarea.field{height:auto;min-height:84px;padding:9px 11px;resize:vertical;line
 .sales-foot{font-size:11px;color:var(--tx-3);text-align:center;margin-top:16px;line-height:1.7}
 .sales-foot a,.back-link{color:var(--brand-lift);font-weight:600;cursor:pointer;text-decoration:none}
 .back-link{display:inline-block;font-size:12px;margin-bottom:14px}
+/* --- onboarding (primeiro acesso) --- */
+#onboard{position:fixed;inset:0;z-index:200;background:var(--void);display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto}
+.ob-card{width:100%;max-width:460px;background:var(--bg-2);border:1px solid var(--line);border-radius:16px;padding:34px 30px;box-shadow:var(--e2);margin:auto}
+.ob-step{display:none}
+.ob-step.on{display:block}
+.ob-card h1{font-size:25px;font-weight:700;letter-spacing:-.02em;margin:6px 0 8px}
+.ob-sub{font-size:13px;color:var(--tx-2);line-height:1.55;margin-bottom:22px}
 
 /* ============================================================ MARCA ============================================================ */
 .mark{height:26px;width:auto;display:block;flex:0 0 auto}
@@ -1150,6 +1157,50 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
       <p style="font-size:11.5px;color:var(--tx-3);margin-top:16px;line-height:1.65">
         Esqueceu a senha? Fale com seu contato na Velu.
       </p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== ONBOARDING (primeiro acesso) ==================== -->
+<div id="onboard" style="display:none">
+  <div class="ob-card">
+    <div class="ob-step on" id="ob-pass">
+      <span class="eyebrow">Bem-vindo à Velu</span>
+      <h1>Crie sua senha</h1>
+      <p class="ob-sub">Este é seu primeiro acesso. Defina uma senha para entrar sempre que quiser.</p>
+      <label class="lbl" for="ob-pw1">Senha</label>
+      <input class="field" id="ob-pw1" type="password" placeholder="mínimo 8 caracteres" autocomplete="new-password">
+      <div style="height:12px"></div>
+      <label class="lbl" for="ob-pw2">Repita a senha</label>
+      <input class="field" id="ob-pw2" type="password" autocomplete="new-password">
+      <p class="login-err" id="ob-pass-err"></p>
+      <button class="btn" id="ob-pass-go" style="width:100%;margin-top:18px;height:42px">Continuar</button>
+    </div>
+    <div class="ob-step" id="ob-quiz">
+      <span class="eyebrow">Quase lá</span>
+      <h1>Conte sobre sua empresa</h1>
+      <p class="ob-sub">Isso ensina a Velu a falar como a sua empresa e a entender seu mercado. Dá para ajustar depois nas configurações.</p>
+      <label class="lbl" for="ob-name">Nome da empresa</label>
+      <input class="field" id="ob-name" type="text">
+      <div style="height:12px"></div>
+      <label class="lbl" for="ob-sector">Setor ou ramo</label>
+      <input class="field" id="ob-sector" type="text" placeholder="ex.: transportadora, clínica odontológica, agência de marketing">
+      <div style="height:12px"></div>
+      <label class="lbl" for="ob-desc">O que a empresa faz? (produtos e serviços)</label>
+      <textarea class="field" id="ob-desc" rows="3" style="min-height:70px;resize:vertical" placeholder="descreva em poucas linhas o que vocês vendem e como"></textarea>
+      <div style="height:12px"></div>
+      <label class="lbl" for="ob-icp">Cliente ideal (para quem vocês vendem)</label>
+      <textarea class="field" id="ob-icp" rows="2" style="min-height:52px;resize:vertical" placeholder="ex.: pequenas transportadoras no interior de SP"></textarea>
+      <div style="height:12px"></div>
+      <label class="lbl" for="ob-tone">Tom de voz</label>
+      <select class="field" id="ob-tone">
+        <option>Profissional e cordial</option>
+        <option>Próximo e informal</option>
+        <option>Técnico e direto</option>
+        <option>Consultivo e educativo</option>
+      </select>
+      <p class="login-err" id="ob-quiz-err"></p>
+      <button class="btn" id="ob-quiz-go" style="width:100%;margin-top:18px;height:42px">Concluir e entrar</button>
     </div>
   </div>
 </div>
@@ -2099,8 +2150,43 @@ async function enter(){
   $('#login').style.display = 'none';
   $('#app').style.display = 'block';
   await boot();
+  if(S.co && S.co.onboarded === false){ startOnboarding(); return; }
   go('chat');
 }
+
+/* Onboarding de primeiro acesso: cria a senha e coleta o contexto da empresa. */
+function startOnboarding(){
+  $('#onboard').style.display = 'flex';
+  $('#ob-name').value = S.co?.name || '';
+  $('#ob-sector').value = S.co?.sector || '';
+  $('#ob-desc').value = S.co?.description || '';
+  $('#ob-icp').value = S.co?.icp || '';
+}
+document.addEventListener('click', async e => {
+  if(e.target.closest('#ob-pass-go')){
+    const p1 = $('#ob-pw1').value, p2 = $('#ob-pw2').value, err = $('#ob-pass-err');
+    err.style.display = 'none';
+    if(p1.length < 8){ err.textContent = 'A senha precisa de pelo menos 8 caracteres.'; err.style.display='block'; return; }
+    if(p1 !== p2){ err.textContent = 'As senhas não conferem.'; err.style.display='block'; return; }
+    const btn = $('#ob-pass-go'); btn.disabled = true; btn.textContent = 'Salvando…';
+    const { error } = await SB.auth.updateUser({ password: p1 });
+    btn.disabled = false; btn.textContent = 'Continuar';
+    if(error){ err.textContent = error.message; err.style.display='block'; return; }
+    $('#ob-pass').classList.remove('on'); $('#ob-quiz').classList.add('on');
+  }
+  if(e.target.closest('#ob-quiz-go')){
+    const err = $('#ob-quiz-err'); err.style.display = 'none';
+    const name = $('#ob-name').value.trim(), desc = $('#ob-desc').value.trim();
+    if(!name || !desc){ err.textContent = 'Preencha ao menos o nome e o que a empresa faz.'; err.style.display='block'; return; }
+    const btn = $('#ob-quiz-go'); btn.disabled = true; btn.textContent = 'Concluindo…';
+    const { error } = await SB.from('companies').update({
+      name, sector: $('#ob-sector').value.trim() || null, description: desc,
+      icp: $('#ob-icp').value.trim() || null, tone: $('#ob-tone').value, onboarded: true,
+    }).eq('id', S.co.id);
+    if(error){ btn.disabled = false; btn.textContent = 'Concluir e entrar'; err.textContent = error.message; err.style.display='block'; return; }
+    location.reload();
+  }
+});
 
 $('#enter').addEventListener('click', login);
 $('#p').addEventListener('keydown', e => { if(e.key === 'Enter') login(); });
