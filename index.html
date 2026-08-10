@@ -140,7 +140,7 @@ textarea.field{height:auto;min-height:84px;padding:9px 11px;resize:vertical;line
 .tag-solid{background:var(--brand);color:#fff;border-color:var(--brand)}
 
 /* ============================================================ LOGIN ============================================================ */
-#login{display:flex;min-height:100vh;background:var(--void)}
+#login{display:flex;height:100vh;overflow:hidden;background:var(--void)}
 .login-art{
   flex:1;padding:52px 56px;display:flex;flex-direction:column;justify-content:space-between;
   position:relative;overflow:hidden;min-width:0;
@@ -989,14 +989,14 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 /* ============================================================ RESPONSIVO ============================================================ */
 @media(max-width:1020px){ .board{grid-template-columns:repeat(2,minmax(0,1fr))} }
 @media(max-width:880px){
-  #login{flex-direction:column}
+  #login{flex-direction:column;height:auto;overflow:visible}
   .login-art{padding:36px 26px;min-height:56vh}
   .login-art h2{max-width:none}
   #net{left:50%;top:44%;width:158%}
   .login-art::after{background:linear-gradient(180deg,rgba(11,21,36,.5) 0%,rgba(11,21,36,.3) 45%,var(--void) 100%)}
   .login-tick{margin-top:26px}
   .wordmark{height:32px}
-  .login-form{flex:1;padding:36px 26px;border-left:none;border-top:1px solid var(--line)}
+  .login-form{flex:1;padding:36px 26px;border-left:none;border-top:1px solid var(--line);overflow-y:visible}
 }
 @media(max-width:780px){
   .shell{flex-direction:column}
