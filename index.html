@@ -243,10 +243,17 @@ textarea.field{height:auto;min-height:84px;padding:9px 11px;resize:vertical;line
 .sales-foot a,.back-link{color:var(--brand-lift);font-weight:600;cursor:pointer;text-decoration:none}
 .back-link{display:inline-block;font-size:12px;margin-bottom:14px}
 /* --- onboarding (primeiro acesso) --- */
-#onboard,#renew{position:fixed;inset:0;z-index:200;background:var(--void);display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto}
+#onboard,#renew,#checkout{position:fixed;inset:0;z-index:200;background:var(--void);display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto}
+#checkout{z-index:210}
 .ob-card{width:100%;max-width:460px;background:var(--bg-2);border:1px solid var(--line);border-radius:16px;padding:34px 30px;box-shadow:var(--e2);margin:auto}
 .ob-step{display:none}
 .ob-step.on{display:block}
+.co-card{position:relative;max-width:440px}
+.co-x{position:absolute;top:12px;right:14px;width:34px;height:34px;background:none;border:none;color:var(--tx-3);font-size:26px;line-height:1;cursor:pointer;border-radius:8px}
+.co-x:hover{color:var(--tx);background:var(--panel-2)}
+.co-step{display:none}
+.co-step.on{display:block}
+#mp-brick{margin-top:6px;min-height:40px}
 .ob-card h1{font-size:25px;font-weight:700;letter-spacing:-.02em;margin:6px 0 8px}
 .ob-sub{font-size:13px;color:var(--tx-2);line-height:1.55;margin-bottom:22px}
 
@@ -1027,6 +1034,7 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://sdk.mercadopago.com/js/v2"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.10.0/mammoth.browser.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
@@ -1216,6 +1224,37 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
     <button class="btn" id="renew-go" style="width:100%;margin-top:18px;height:44px">Renovar assinatura</button>
     <button class="btn btn-ghost" id="renew-out" style="width:100%;margin-top:10px;height:40px">Sair</button>
     <p class="ob-sub" style="margin-top:16px;font-size:12px">Dúvidas? Fale com a gente em contatovelucrm@gmail.com</p>
+  </div>
+</div>
+
+<!-- ==================== CHECKOUT (assinar pelo próprio site) ==================== -->
+<div id="checkout" style="display:none">
+  <div class="ob-card co-card">
+    <button class="co-x" id="co-x" aria-label="Fechar">&times;</button>
+    <span class="eyebrow">Assinatura Velu</span>
+    <h1 id="co-title" style="font-size:22px">Plano</h1>
+    <p class="ob-sub" id="co-price" style="margin-bottom:18px">R$ 0 / mês</p>
+
+    <!-- passo 1: e-mail + empresa -->
+    <div class="co-step on" id="co-data">
+      <label class="lbl" for="co-email">Seu melhor e-mail</label>
+      <input class="field" id="co-email" type="email" placeholder="voce@empresa.com.br" autocomplete="email">
+      <div style="height:12px"></div>
+      <label class="lbl" for="co-company">Nome da empresa</label>
+      <input class="field" id="co-company" type="text" placeholder="como sua empresa se chama">
+      <p class="login-err" id="co-data-err"></p>
+      <button class="btn" id="co-next" style="width:100%;margin-top:18px;height:44px">Ir para o pagamento</button>
+      <p class="ob-sub" style="margin-top:14px;font-size:12px">Pagamento seguro pelo Mercado Pago. Cartão, Pix ou boleto. Você cancela quando quiser.</p>
+    </div>
+
+    <!-- passo 2: formulário de pagamento (Mercado Pago Bricks) -->
+    <div class="co-step" id="co-pay">
+      <div id="mp-brick"></div>
+      <a class="back-link" id="co-back" style="display:inline-block;margin-top:12px">← Voltar</a>
+    </div>
+
+    <!-- passo 3: resultado (Pix, boleto, aprovado, erro) -->
+    <div class="co-step" id="co-done"></div>
   </div>
 </div>
 
@@ -2233,23 +2272,174 @@ $('#u').addEventListener('input', () => $('#err').style.display = 'none');
 const showSignin = v => { $('#signin-panel').style.display = v ? '' : 'none'; $('#sales-panel').style.display = v ? 'none' : ''; };
 $('#to-signin')?.addEventListener('click', () => { showSignin(true); $('#u').focus(); });
 $('#to-sales')?.addEventListener('click', () => showSignin(false));
-document.querySelectorAll('.plan-buy').forEach(b => b.addEventListener('click', async () => {
-  const nome = { essencial:'Essencial', pro:'Pro', premium:'Premium' }[b.dataset.plan] || 'plano';
-  const go = await uiConfirm(`Você escolheu o plano ${nome}. O checkout com cartão, Pix e boleto entra na próxima etapa (estamos montando o pagamento agora). Já tem conta e quer entrar?`, { okText:'Entrar', cancelText:'Fechar' });
-  if(go) showSignin(true);
-}));
+document.querySelectorAll('.plan-buy').forEach(b => b.addEventListener('click', () => openCheckout(b.dataset.plan)));
 $('#logout').addEventListener('click', async () => {
   await SB.auth.signOut();
   location.reload();
 });
 
-/* tela de renovação: o checkout embutido entra na próxima etapa; por ora orienta o cliente */
-$('#renew-go')?.addEventListener('click', async () => {
-  await uiConfirm('O pagamento pelo próprio site (cartão, Pix e boleto) está sendo finalizado. Enquanto isso, envie um e-mail para contatovelucrm@gmail.com que renovamos seu acesso na hora.', { okText:'Entendi', cancelText:'Fechar' });
+/* tela de renovação: reabre o mesmo checkout com o e-mail da conta (o webhook
+   reconhece o usuário existente e estende a assinatura +30 dias). */
+$('#renew-go')?.addEventListener('click', () => {
+  openCheckout(S.sub?.plan_slug || 'pro', { email: S.user?.email || '', lockEmail: true, company: S.co?.name || '' });
 });
 $('#renew-out')?.addEventListener('click', async () => {
   await SB.auth.signOut();
   location.reload();
+});
+
+/* ===================== CHECKOUT EMBUTIDO (Mercado Pago Bricks) ===================== */
+const MP_PUBLIC_KEY = 'APP_USR-6bdf0181-3f96-43c4-811f-4215b1a60479';
+const CREATE_PAYMENT_FN = 'https://hjtdkfrlogktvmkeauwf.supabase.co/functions/v1/create-payment';
+const CHECKOUT_KEY = 'sb_publishable_ypvYT2pDW59CNxtgcUGA6w_cUNL-W0Q';
+const PLAN_LABELS = { essencial:'Essencial', pro:'Pro', premium:'Premium' };
+let mpInstance = null, brickController = null, coPlan = null, coAmount = 0, coLockEmail = false, coRenew = false;
+
+async function effectiveAmountCents(planSlug){
+  const [{ data: plan }, { data: cfg }] = await Promise.all([
+    SB.from('plans').select('price_cents').eq('slug', planSlug).maybeSingle(),
+    SB.from('billing_settings').select('test_amount_cents').maybeSingle(),
+  ]);
+  const test = cfg?.test_amount_cents;
+  return (test && test > 0) ? test : (plan?.price_cents ?? 0);
+}
+
+function coStep(id){ ['co-data','co-pay','co-done'].forEach(s => $('#'+s).classList.toggle('on', s === id)); }
+
+async function openCheckout(planSlug, opts = {}){
+  if(!['essencial','pro','premium'].includes(planSlug)) planSlug = 'pro';
+  coPlan = planSlug;
+  coLockEmail = !!opts.lockEmail;
+  coRenew = !!opts.lockEmail;
+  $('#co-title').textContent = 'Plano Velu ' + (PLAN_LABELS[planSlug] || '');
+  $('#co-price').textContent = 'carregando valor…';
+  $('#co-email').value = opts.email || '';
+  $('#co-email').readOnly = coLockEmail;
+  $('#co-company').value = opts.company || '';
+  $('#co-data-err').style.display = 'none';
+  $('#co-done').innerHTML = '';
+  coStep('co-data');
+  $('#checkout').style.display = 'flex';
+  const cents = await effectiveAmountCents(planSlug);
+  coAmount = cents / 100;
+  $('#co-price').textContent = coAmount > 0 ? brl(coAmount) + ' / mês' : 'valor a confirmar';
+}
+
+function closeCheckout(){
+  $('#checkout').style.display = 'none';
+  if(brickController){ try { brickController.unmount(); } catch {} brickController = null; }
+}
+
+async function mountBrick(email){
+  if(!window.MercadoPago){ toast('Pagamento indisponível no momento. Recarregue a página.', true); coStep('co-data'); return; }
+  if(!(coAmount > 0)){ toast('Não consegui carregar o valor. Tente de novo.', true); coStep('co-data'); return; }
+  if(!mpInstance) mpInstance = new MercadoPago(MP_PUBLIC_KEY, { locale:'pt-BR' });
+  if(brickController){ try { brickController.unmount(); } catch {} brickController = null; }
+  $('#mp-brick').innerHTML = '';
+  try {
+    brickController = await mpInstance.bricks().create('payment', 'mp-brick', {
+      initialization: { amount: coAmount, payer: { email } },
+      customization: {
+        visual: { style: { theme: 'dark' } },
+        paymentMethods: { creditCard:'all', debitCard:'all', ticket:'all', bankTransfer:'all', maxInstallments: 12 },
+      },
+      callbacks: {
+        onReady: () => {},
+        onError: (err) => { console.error('brick', err); },
+        onSubmit: ({ formData }) => submitPayment(formData),
+      },
+    });
+  } catch(e){ console.error(e); toast('Não consegui abrir o pagamento. Tente de novo.', true); coStep('co-data'); }
+}
+
+function submitPayment(formData){
+  return new Promise((resolve, reject) => {
+    (async () => {
+      try {
+        const email = $('#co-email').value.trim().toLowerCase();
+        const company = $('#co-company').value.trim();
+        const r = await fetch(CREATE_PAYMENT_FN, {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json', 'apikey': CHECKOUT_KEY, 'Authorization':'Bearer ' + CHECKOUT_KEY },
+          body: JSON.stringify({ plan_slug: coPlan, company_name: company, email, formData }),
+        });
+        const res = await r.json().catch(() => ({}));
+        if(!r.ok || res.error){ showCheckoutOutcome({ error: res.error || 'Não consegui criar o pagamento.', detail: res.detail }, email); reject(); return; }
+        showCheckoutOutcome(res, email);
+        resolve();
+      } catch(e){ showCheckoutOutcome({ error:'Falha de conexão. Tente de novo.' }, ''); reject(); }
+    })();
+  });
+}
+
+function showCheckoutOutcome(res, email){
+  // Mensagem de entrega muda entre conta nova (recebe e-mail) e renovação (reativa e recarrega).
+  const entrega = coRenew
+    ? 'Assim que o pagamento cair, seu acesso é reativado. Atualize esta página em alguns instantes.'
+    : `Assim que o pagamento cair, enviamos o link de acesso para <b>${email}</b>. Pode fechar esta janela.`;
+  let html;
+  if(res.error){
+    html = `<span class="eyebrow">Ops</span>
+      <h2 style="font-size:19px;margin:8px 0 12px">Não consegui concluir</h2>
+      <p class="ob-sub">${res.error}${res.detail ? ' (' + res.detail + ')' : ''}</p>
+      <button class="btn" data-co-retry style="width:100%;margin-top:8px;height:42px">Tentar de novo</button>`;
+  } else if(res.pix && res.pix.qr_code_base64){
+    html = `<span class="eyebrow" style="color:var(--brand-lift)">Pague com Pix para ativar</span>
+      <h2 style="font-size:19px;margin:8px 0 12px">Escaneie o QR code</h2>
+      <img alt="QR Pix" src="data:image/png;base64,${res.pix.qr_code_base64}" style="width:190px;height:190px;display:block;margin:0 auto 14px;border-radius:10px;background:#fff;padding:8px">
+      <label class="lbl">Ou use o Pix copia e cola</label>
+      <textarea class="field" id="co-pix" readonly rows="3" style="font-size:11px;resize:none">${res.pix.qr_code || ''}</textarea>
+      <button class="btn btn-ghost" data-co-copy style="width:100%;margin-top:8px">Copiar código</button>
+      <p class="ob-sub" style="margin-top:14px">${entrega}</p>`;
+  } else if(res.boleto_url){
+    const bol = coRenew
+      ? 'Após a compensação (1 a 2 dias úteis) seu acesso é reativado automaticamente.'
+      : `O acesso é liberado após a compensação (1 a 2 dias úteis) e enviamos para <b>${email}</b>.`;
+    html = `<span class="eyebrow">Boleto gerado</span>
+      <h2 style="font-size:19px;margin:8px 0 12px">Seu boleto está pronto</h2>
+      <a class="btn" href="${res.boleto_url}" target="_blank" rel="noopener" style="width:100%;height:42px;display:flex;align-items:center;justify-content:center">Abrir boleto</a>
+      <p class="ob-sub" style="margin-top:14px">${bol}</p>`;
+  } else if(res.status === 'approved'){
+    const msg = coRenew
+      ? 'Seu acesso foi reativado. Atualize a página para continuar de onde parou.'
+      : `Enviamos para <b>${email}</b> o link para você definir sua senha e entrar. Confira a caixa de entrada (e o spam).`;
+    html = `<div style="text-align:center">
+        <div style="font-size:42px;color:var(--up);line-height:1">✓</div>
+        <h2 style="font-size:20px;margin:8px 0 10px">Pagamento aprovado</h2>
+        <p class="ob-sub">${msg}</p>
+        ${coRenew ? '<button class="btn" data-co-reload style="width:100%;margin-top:12px;height:42px">Atualizar e entrar</button>' : ''}
+      </div>`;
+  } else if(res.status === 'rejected'){
+    html = `<span class="eyebrow">Pagamento não aprovado</span>
+      <h2 style="font-size:19px;margin:8px 0 12px">Não deu certo desta vez</h2>
+      <p class="ob-sub">O pagamento foi recusado. Tente outro cartão ou use Pix.</p>
+      <button class="btn" data-co-retry style="width:100%;margin-top:8px;height:42px">Tentar de novo</button>`;
+  } else {
+    html = `<span class="eyebrow">Pagamento em análise</span>
+      <h2 style="font-size:19px;margin:8px 0 12px">Estamos confirmando</h2>
+      <p class="ob-sub">${entrega}</p>`;
+  }
+  $('#co-done').innerHTML = html;
+  coStep('co-done');
+}
+
+$('#co-x')?.addEventListener('click', closeCheckout);
+$('#co-back')?.addEventListener('click', () => coStep('co-data'));
+$('#co-next')?.addEventListener('click', async () => {
+  const email = $('#co-email').value.trim(), company = $('#co-company').value.trim();
+  const err = $('#co-data-err'); err.style.display = 'none';
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ err.textContent = 'Digite um e-mail válido.'; err.style.display = 'block'; return; }
+  if(company.length < 2){ err.textContent = 'Diga o nome da sua empresa.'; err.style.display = 'block'; return; }
+  coStep('co-pay');
+  await mountBrick(email.toLowerCase());
+});
+$('#co-done')?.addEventListener('click', async e => {
+  if(e.target.closest('[data-co-retry]')) coStep('co-data');
+  if(e.target.closest('[data-co-reload]')) location.reload();
+  if(e.target.closest('[data-co-copy]')){
+    const ta = $('#co-pix');
+    if(ta){ try { await navigator.clipboard.writeText(ta.value); } catch { ta.select(); document.execCommand('copy'); } toast('Código Pix copiado.'); }
+  }
 });
 
 /* sessão viva: recarrega direto no app */
