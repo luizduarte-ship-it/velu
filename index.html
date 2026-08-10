@@ -186,7 +186,7 @@ textarea.field{height:auto;min-height:84px;padding:9px 11px;resize:vertical;line
 .login-form{
   flex:0 0 452px;padding:56px 52px;
   background:linear-gradient(180deg,var(--bg-2) 0%,var(--bg) 60%);
-  display:flex;flex-direction:column;justify-content:center;
+  display:flex;flex-direction:column;justify-content:flex-start;overflow-y:auto;
   border-left:1px solid var(--line);
 }
 .login-form>*{animation:loginUp .6s var(--ease) both}
@@ -218,6 +218,30 @@ textarea.field{height:auto;min-height:84px;padding:9px 11px;resize:vertical;line
   font-family:var(--sans);font-weight:600;font-size:11px;color:var(--tx);
   background:var(--void);padding:2px 6px;border-radius:4px;letter-spacing:.01em;
 }
+/* --- landing / vendas no login --- */
+.login-pane{margin:auto 0;width:100%}
+.sales-sub{font-size:12.5px;color:var(--tx-2);line-height:1.6;margin:6px 0 20px}
+.plans{display:flex;flex-direction:column;gap:12px}
+.plan{position:relative;border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--panel)}
+.plan.hot{border-color:rgba(120,170,255,.5);background:linear-gradient(180deg,rgba(17,108,254,.08),var(--panel));box-shadow:0 0 0 3px var(--brand-glow),0 10px 30px rgba(5,10,20,.35)}
+.plan-badge{position:absolute;top:-9px;right:14px;background:linear-gradient(135deg,var(--brand-lift),var(--brand));color:#fff;font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:100px;box-shadow:0 3px 10px rgba(17,108,254,.4)}
+.plan-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.plan-name{font-size:16px;font-weight:700;letter-spacing:-.01em}
+.plan-tag{font-size:10px;color:var(--tx-3);font-weight:600;text-align:right}
+.plan-price{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:6px 0 12px}
+.plan-price span{font-size:12px;font-weight:600;color:var(--tx-3)}
+.plan-feats{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column;gap:7px}
+.plan-feats li{font-size:12px;color:var(--tx-2);line-height:1.4;padding-left:20px;position:relative}
+.plan-feats li::before{position:absolute;left:0;top:-1px;font-weight:700}
+.plan-feats li.ok::before{content:"✓";color:var(--up)}
+.plan-feats li.no{color:var(--tx-4)}
+.plan-feats li.no::before{content:"✕";color:var(--tx-4)}
+.plan-feats li.lim{color:var(--tx-3)}
+.plan-feats li.lim::before{content:"•";color:var(--tx-3)}
+.plan-buy{width:100%}
+.sales-foot{font-size:11px;color:var(--tx-3);text-align:center;margin-top:16px;line-height:1.7}
+.sales-foot a,.back-link{color:var(--brand-lift);font-weight:600;cursor:pointer;text-decoration:none}
+.back-link{display:inline-block;font-size:12px;margin-bottom:14px}
 
 /* ============================================================ MARCA ============================================================ */
 .mark{height:26px;width:auto;display:block;flex:0 0 auto}
@@ -1050,33 +1074,83 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 
     <div>
       <h2 class="display">A inteligência comercial<br><span class="acc">da sua empresa.</span></h2>
-      <p class="lead">Acesso restrito. As contas são criadas pela equipe Velu, uma por empresa contratante, não existe cadastro aberto.</p>
+      <p class="lead">CRM com inteligência artificial que acha seus clientes, organiza suas vendas e responde por você. Assine em minutos, com cartão, Pix ou boleto.</p>
       <div class="login-tick"><i></i> Rede ativa</div>
     </div>
 
     <p style="font-size:10px;font-weight:600;color:var(--tx-4);letter-spacing:.16em">VELU.IA · 2026</p>
   </div>
 
-  <div class="login-form">
-    <h1>Entrar</h1>
-    <p style="font-size:13px;color:var(--tx-2);margin-bottom:26px">Use as credenciais que enviamos no onboarding.</p>
+  <div class="login-form" id="login-form">
 
-    <label class="lbl" for="u">E-mail corporativo</label>
-    <input class="field" id="u" type="email" placeholder="voce@empresa.com.br" autocomplete="username">
+    <!-- Vitrine de vendas (padrão) -->
+    <div class="login-pane" id="sales-panel">
+      <h1>Escolha seu plano</h1>
+      <p class="sales-sub">Comece hoje. Cartão, Pix ou boleto, e você cancela quando quiser.</p>
+      <div class="plans">
+        <div class="plan">
+          <div class="plan-top"><span class="plan-name">Essencial</span><span class="plan-tag">pra experimentar</span></div>
+          <div class="plan-price">R$ 97<span>/mês</span></div>
+          <ul class="plan-feats">
+            <li class="ok">Chat IA (Empresa e Livre)</li>
+            <li class="ok">Memória, skills e prompts</li>
+            <li class="no">Busca de leads</li>
+            <li class="no">Pipeline e dossiês</li>
+            <li class="lim">Limite de 30 mensagens por dia</li>
+          </ul>
+          <button class="btn btn-ghost plan-buy" data-plan="essencial">Assinar Essencial</button>
+        </div>
+        <div class="plan hot">
+          <span class="plan-badge">Mais vendido</span>
+          <div class="plan-top"><span class="plan-name">Pro</span><span class="plan-tag">melhor custo-benefício</span></div>
+          <div class="plan-price">R$ 197<span>/mês</span></div>
+          <ul class="plan-feats">
+            <li class="ok">Tudo do Essencial</li>
+            <li class="ok"><b>Busca de leads (base pública de CNPJ)</b></li>
+            <li class="ok">Pipeline e dossiês de concorrentes</li>
+            <li class="ok">Sugestão de preço e criador de imagem</li>
+            <li class="lim">200 mensagens por dia</li>
+          </ul>
+          <button class="btn plan-buy" data-plan="pro">Assinar Pro</button>
+        </div>
+        <div class="plan">
+          <div class="plan-top"><span class="plan-name">Premium</span><span class="plan-tag">operação completa</span></div>
+          <div class="plan-price">R$ 397<span>/mês</span></div>
+          <ul class="plan-feats">
+            <li class="ok">Tudo do Pro</li>
+            <li class="ok">Editor de vídeo e apresentações</li>
+            <li class="ok">Velu Code</li>
+            <li class="ok">Limites altos e suporte prioritário</li>
+          </ul>
+          <button class="btn btn-ghost plan-buy" data-plan="premium">Assinar Premium</button>
+        </div>
+      </div>
+      <p class="sales-foot">Já tem conta? <a id="to-signin">Entrar</a></p>
+    </div>
 
-    <div style="height:16px"></div>
-    <label class="lbl" for="p">Senha</label>
-    <input class="field" id="p" type="password" autocomplete="current-password">
+    <!-- Login (oculto por padrão) -->
+    <div class="login-pane" id="signin-panel" style="display:none">
+      <a class="back-link" id="to-sales">← Ver planos</a>
+      <h1>Entrar</h1>
+      <p style="font-size:13px;color:var(--tx-2);margin-bottom:26px">Use as credenciais da sua conta Velu.</p>
 
-    <label class="remember" for="remember"><input type="checkbox" id="remember" checked> Continuar conectado neste computador</label>
+      <label class="lbl" for="u">E-mail</label>
+      <input class="field" id="u" type="email" placeholder="voce@empresa.com.br" autocomplete="username">
 
-    <p class="login-err" id="err">E-mail ou senha incorretos.</p>
+      <div style="height:16px"></div>
+      <label class="lbl" for="p">Senha</label>
+      <input class="field" id="p" type="password" autocomplete="current-password">
 
-    <button class="btn" id="enter" style="margin-top:22px;width:100%;height:40px">Entrar</button>
+      <label class="remember" for="remember"><input type="checkbox" id="remember" checked> Continuar conectado neste computador</label>
 
-    <p style="font-size:11.5px;color:var(--tx-3);margin-top:16px;line-height:1.65">
-      Esqueceu a senha ou precisa de mais um acesso? Fale com seu contato na Velu.
-    </p>
+      <p class="login-err" id="err">E-mail ou senha incorretos.</p>
+
+      <button class="btn" id="enter" style="margin-top:22px;width:100%;height:40px">Entrar</button>
+
+      <p style="font-size:11.5px;color:var(--tx-3);margin-top:16px;line-height:1.65">
+        Esqueceu a senha? Fale com seu contato na Velu.
+      </p>
+    </div>
   </div>
 </div>
 
@@ -2031,6 +2105,16 @@ async function enter(){
 $('#enter').addEventListener('click', login);
 $('#p').addEventListener('keydown', e => { if(e.key === 'Enter') login(); });
 $('#u').addEventListener('input', () => $('#err').style.display = 'none');
+
+/* landing de vendas: alterna vitrine <-> login; o "Assinar" e mock ate o checkout ficar pronto */
+const showSignin = v => { $('#signin-panel').style.display = v ? '' : 'none'; $('#sales-panel').style.display = v ? 'none' : ''; };
+$('#to-signin')?.addEventListener('click', () => { showSignin(true); $('#u').focus(); });
+$('#to-sales')?.addEventListener('click', () => showSignin(false));
+document.querySelectorAll('.plan-buy').forEach(b => b.addEventListener('click', async () => {
+  const nome = { essencial:'Essencial', pro:'Pro', premium:'Premium' }[b.dataset.plan] || 'plano';
+  const go = await uiConfirm(`Você escolheu o plano ${nome}. O checkout com cartão, Pix e boleto entra na próxima etapa (estamos montando o pagamento agora). Já tem conta e quer entrar?`, { okText:'Entrar', cancelText:'Fechar' });
+  if(go) showSignin(true);
+}));
 $('#logout').addEventListener('click', async () => {
   await SB.auth.signOut();
   location.reload();
