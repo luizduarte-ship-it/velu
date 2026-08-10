@@ -2446,8 +2446,8 @@ $('#co-done')?.addEventListener('click', async e => {
    Link oculto de teste: velucrm.com/#teste abre o checkout do plano de R$1
    (não aparece na vitrine; usado só para validar o pagamento ponta a ponta). */
 SB.auth.getSession().then(({ data }) => {
+  if(location.hash === '#teste'){ openCheckout('teste'); return; }
   if(data.session){ S.user = data.session.user; enter(); }
-  else if(location.hash === '#teste'){ openCheckout('teste'); }
 });
 
 /* ============================================================ CARGA ============================================================ */
