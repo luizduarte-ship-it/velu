@@ -12,23 +12,32 @@ sistema atende todas, e o contexto de cada uma e injetado em tempo de execucao.
 A IA do produto se chama "Velu". Esta no ar em **https://velucrm.com**.
 
 ## Estrutura do repositorio
-Repo enxuto, sem build no frontend. Atualizar esta lista quando algo mudar:
-- `index.html` (raiz, ~4200 linhas): o produto inteiro, HTML + CSS + JS puro num
+O fonte e editado sempre no `index.html` (sem framework). O build so ofusca o JS
+para producao. Atualizar esta lista quando algo mudar:
+- `index.html` (raiz, ~4700 linhas): o produto inteiro, HTML + CSS + JS puro num
   unico arquivo, sem framework. Usa supabase-js via CDN. E grande: nunca ler
   inteiro; localizar por palavra-chave (nome de funcao, classe CSS, texto
-  visivel) e ler so o trecho ao redor.
-- `netlify.toml`: config de deploy. No build, copia `index.html` para `dist/` e
-  publica `dist/` (assim CLAUDE.md e o resto do repo nao vao para o ar).
+  visivel) e ler so o trecho ao redor. **Editar sempre aqui**, nunca no `dist/`.
+- `build.js`: build de producao. Ofusca (minifica + embaralha nomes locais, via
+  terser) o unico `<script>` inline do `index.html` e escreve `dist/index.html`,
+  copiando tambem `_headers` e `robots.txt`. Preserva nomes globais (toplevel)
+  porque ha handlers no HTML que os referenciam pelo nome.
+- `package.json`: declara o terser (a Netlify roda `npm install` + `node build.js`).
+- `_headers`: cabecalhos de seguranca aplicados pela Netlify (CSP, X-Frame-Options,
+  nosniff, Referrer-Policy, Permissions-Policy, HSTS).
+- `robots.txt`: bloqueia crawlers (`Disallow: /`).
+- `netlify.toml`: config de deploy. Roda `node build.js` e publica `dist/` (assim
+  CLAUDE.md e o resto do repo nao vao para o ar; o JS publicado vai ofuscado).
 - `dist/`: gerado no build, ignorado no git.
 - `CLAUDE.md`: este arquivo.
 - As edge functions (Deno/TypeScript) nao ficam versionadas neste repo; vivem no
   Supabase (deploy via MCP ou `supabase functions deploy <slug>`).
 
 ## Comandos
-- **Publicar o frontend:** `git push` no branch de trabalho. A Netlify observa o
-  repo e faz build+deploy automatico em `velucrm.com` (~1-2 min). Nao existe
-  passo de build manual nem upload de arquivo.
-- **Preview local:** abrir `index.html` no navegador (ou servir a pasta). Sem build.
+- **Publicar o frontend:** `git push` no branch de trabalho. A Netlify roda
+  `node build.js` (ofusca o JS) e faz deploy automatico em `velucrm.com` (~1-2 min).
+- **Build local (opcional):** `npm install && node build.js` gera `dist/`.
+- **Preview local:** abrir `index.html` no navegador (o fonte, nao o ofuscado).
 - **Deploy de edge function:** `supabase functions deploy <slug>` (projeto
   `hjtdkfrlogktvmkeauwf`), ou a ferramenta MCP `deploy_edge_function`.
 - **Checar sintaxe do JS do index.html** (nao ha lint/test): extrair os blocos

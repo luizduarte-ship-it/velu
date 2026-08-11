@@ -1,0 +1,12 @@
+{
+  "name": "velu",
+  "private": true,
+  "version": "1.0.0",
+  "description": "VELU CRM IA - build de producao (ofusca o JS e publica em dist/)",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "dependencies": {
+    "terser": "^5.49.2"
+  }
+}

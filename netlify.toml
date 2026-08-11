@@ -1,7 +1,7 @@
-# Publica só o index.html e o _headers (o Netlify copia para dist/ no build).
-# Assim CLAUDE.md e outros arquivos do repo não vão para o ar.
+# Build: ofusca (minifica + embaralha) o JS inline do index.html e publica em dist/
+# junto com _headers e robots.txt (ver build.js). CLAUDE.md e o resto ficam de fora.
 [build]
-  command = "mkdir -p dist && cp index.html dist/index.html && cp _headers dist/_headers"
+  command = "node build.js"
   publish = "dist"
 
 # Consolida o www no dominio principal (evita certificado/host separado).
