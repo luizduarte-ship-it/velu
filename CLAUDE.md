@@ -88,7 +88,9 @@ para producao. Atualizar esta lista quando algo mudar:
 description, profile, daily_lead_limit), `profiles` (usuario -> company_id),
 `competitors` + `competitor_notes` (dossies), `leads` (pipeline e prospeccao),
 `lead_runs` (execucoes de busca; cursor de paginacao em `progress.next`),
-`skills`, `conversations`, `messages`, `ai_memories`, `files`, `usage_counters`.
+`skills`, `conversations`, `messages`, `ai_memories`, `files`, `usage_counters`,
+`tasks` (gerenciador de tarefas por urgencia: priority urgente/moderada/leve,
+done, due_date; RLS por company_id; view "Tarefas" na aba Comercial).
 - `leads.in_pipeline` (bool): o Pipeline so mostra leads com `in_pipeline=true`.
   Leads gerados NAO entram no board sozinhos; a entrada e manual pelo menu de 3
   pontos. `leads.due_date` (date): prazo mostrado no card.

@@ -51,6 +51,7 @@
   /* semântica */
   --up:#3E9C7A;   --up-bg:#12301F;   --up-line:#1F4C36;
   --dn:#D2566A;   --dn-bg:#331722;   --dn-line:#552636;
+  --warn:#D8A83E; --warn-bg:#322611; --warn-line:#554316;
   --at:#D79A3C;   --at-bg:#33260F;   --at-line:#54401C;
   /* forma e movimento */
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
@@ -645,6 +646,27 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 .deal-due{display:flex;align-items:center;gap:5px;margin-top:8px;padding-top:7px;border-top:1px solid var(--line);font-size:10px;font-weight:600;color:var(--brand-lift)}
 .deal-due .i{color:var(--brand-lift);width:12px;height:12px}
 .deal-v{font-size:11px;font-weight:500;color:var(--tx-3);font-variant-numeric:tabular-nums}
+
+/* ---- Gerenciador de tarefas (aba Comercial) ---- */
+.tasks-board{grid-template-columns:repeat(3,minmax(0,1fr))}
+.task-col .col-body{min-height:220px}
+.task-col .task-dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+.task-col.p-urgente  .task-dot{background:var(--dn)}   .task-col.p-urgente  .col-h b{color:var(--dn)}
+.task-col.p-moderada .task-dot{background:var(--warn)} .task-col.p-moderada .col-h b{color:var(--warn)}
+.task-col.p-leve     .task-dot{background:var(--up)}   .task-col.p-leve     .col-h b{color:var(--up)}
+.task .deal-n{flex:1 1 auto}
+.task-check{flex:0 0 auto;width:22px;height:22px;display:grid;place-items:center;border-radius:5px;color:var(--tx-4);margin:-2px 6px 0 -3px;transition:color .12s var(--ease),background .12s var(--ease)}
+.task-check:hover{color:var(--up);background:var(--up-bg)}
+.task-check .i{width:14px;height:14px}
+.task-note{font-size:11.5px;color:var(--tx-3);margin-top:5px;line-height:1.45;overflow-wrap:anywhere}
+.task-done{opacity:.5}
+.task-done .deal-n{text-decoration:line-through}
+.task-done .task-check{color:var(--up)}
+.task-empty{font-size:11.5px;color:var(--tx-4);text-align:center;padding:12px 0 6px}
+.task-add{width:100%;display:flex;align-items:center;justify-content:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--tx-3);background:transparent;border:1px dashed var(--line-2);border-radius:7px;padding:8px;transition:color .12s var(--ease),border-color .12s var(--ease),background .12s var(--ease)}
+.task-add:hover{color:var(--brand-lift);border-color:var(--brand);background:var(--brand-bg)}
+.task-add .i{width:12px;height:12px}
+@media(max-width:1020px){ .tasks-board{grid-template-columns:1fr} }
 
 /* ============================================================ PERSONALIZAR ============================================================ */
 .set-nav{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:24px;overflow-x:auto;scrollbar-width:none}
@@ -1282,6 +1304,7 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
       <button class="nav" data-view="comp" aria-current="page"><svg class="i"><use href="#ic-radar"/></svg>Concorrentes<span class="nav-count" id="nc-rivals"></span></button>
       <button class="nav" data-view="leads"><svg class="i"><use href="#ic-target"/></svg>Leads<span class="nav-count" id="nc-leads"></span></button>
       <button class="nav" data-view="pipe"><svg class="i"><use href="#ic-board"/></svg>Pipeline<span class="nav-count" id="nc-pipe"></span></button>
+      <button class="nav" data-view="tasks"><svg class="i"><use href="#ic-check"/></svg>Tarefas<span class="nav-count" id="nc-tasks"></span></button>
       <button class="nav" data-view="dispatch"><svg class="i"><use href="#ic-send"/></svg>Agente de disparo</button>
     </div>
 
@@ -1709,6 +1732,25 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
         <div class="board" id="board"></div>
       </section>
 
+      <!-- ---------- TAREFAS ---------- -->
+      <section class="view" id="v-tasks">
+        <div class="page-hd">
+          <div class="hd-row">
+            <div>
+              <span class="eyebrow">Comercial</span>
+              <h1>Tarefas</h1>
+              <p class="lead">Organize o que precisa fazer por urgência. Arraste os cartões entre as colunas para repriorizar.</p>
+            </div>
+            <div style="text-align:right">
+              <div class="num" style="font-size:24px" id="tasks-total"></div>
+              <div class="eyebrow" style="margin-top:2px">tarefas abertas</div>
+              <button class="btn btn-sm" id="tasks-add-top" style="margin-top:10px"><svg class="i i-sm"><use href="#ic-plus"/></svg>Nova tarefa</button>
+            </div>
+          </div>
+        </div>
+        <div class="board tasks-board" id="tasks-board"></div>
+      </section>
+
       <!-- ---------- PERSONALIZAR ---------- -->
       <!-- ============ VELU CODE ============ -->
       <section class="view" id="v-code">
@@ -2111,7 +2153,7 @@ if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdeli
 const S = { user:null, profile:null, co:null, rivals:[], prompts:[], projects:[],
             leads:[], files:[], team:[], niches:[], convo:null, busy:false, mode:'empresa', rafPending:false,
             pendingFiles:[], areaFiles:{rival:[],leads:[],code:[],videoai:[]}, answerCache:new Map(),
-            leadAutomations:[], leadRuns:[], learning:null, memories:[],
+            leadAutomations:[], leadRuns:[], learning:null, memories:[], tasks:[],
             video:{file:null,url:null,duration:0,start:0,end:0,aspect:'original',captions:[],captionStyle:'box',progressBar:false,fade:false,exporting:false,recorder:null,cancel:false} };
 
 const $  = s => document.querySelector(s);
@@ -2532,6 +2574,7 @@ async function boot(){
   paintBoard(); paintSettings(); paintLearning(); paintDecks(); watchRivals(); setMode('empresa');
   document.querySelectorAll('textarea').forEach(resizeSmartInput);
   loadUsage();
+  loadTasks();
 
   /* primeira coleta acontece uma única vez; as próximas são sob demanda */
   if(!S.co.profile && (!S.co.profile_status || S.co.profile_status === 'idle'))
@@ -2717,7 +2760,7 @@ function reloadHistory(){
 
 /* ============================================================ NAVEGAÇÃO ============================================================ */
 const LABELS = { chat:['Conversa'], comp:['Comercial','Concorrentes'], dossier:['Comercial','Dossiê'], leads:['Comercial','Leads'],
-  dispatch:['Comercial','Agente de disparo'], pipe:['Comercial','Pipeline'],
+  dispatch:['Comercial','Agente de disparo'], pipe:['Comercial','Pipeline'], tasks:['Comercial','Tarefas'],
   decks:['Criação','Apresentações'], prompts:['Criação','Biblioteca de prompts'], proj:['Criação','Projetos'], set:['Personalizar'],
   code:['Estúdio','Velu Code'], image:['Estúdio','Criador de imagem'], skills:['Estúdio','Skills'], video:['Criação','Velu Vídeo'] };
 function crumb(parts){
@@ -3437,6 +3480,155 @@ function wireDrag(){
 function pipeCounts(){
   $('#nc-pipe').textContent = S.leads.filter(l => l.in_pipeline && l.stage !== 'fechado' && l.stage !== 'perdido').length;
 }
+
+/* ============================================================ TAREFAS ============================================================ */
+const TASK_PRIOS = [
+  { key:'urgente',  label:'Urgente',  hint:'ação imediata' },
+  { key:'moderada', label:'Moderada', hint:'sem correria' },
+  { key:'leve',     label:'Leve',     hint:'quando der' },
+];
+
+async function loadTasks(){
+  const { data, error } = await SB.from('tasks').select('*').order('created_at');
+  if(error){ paintTasks(); return; }
+  S.tasks = data ?? [];
+  paintTasks();
+}
+
+function paintTasks(){
+  const board = $('#tasks-board'); if(!board) return;
+  const tasks = S.tasks || [];
+  const abertas = tasks.filter(t => !t.done).length;
+  if($('#tasks-total')) $('#tasks-total').textContent = abertas;
+  if($('#nc-tasks')) $('#nc-tasks').textContent = abertas || '';
+  board.innerHTML = TASK_PRIOS.map(p => {
+    const items = tasks.filter(t => t.priority === p.key)
+      .sort((a,b) => (a.done - b.done) || (new Date(a.created_at) - new Date(b.created_at)));
+    const cards = items.map(taskCard).join('');
+    return `<div class="task-col p-${p.key}">
+      <div class="col-h"><span class="task-dot"></span><b>${p.label}</b><span class="num">${items.filter(t => !t.done).length}</span><span class="sum">${p.hint}</span></div>
+      <div class="col-body" data-prio="${p.key}">
+        ${cards || '<div class="task-empty">Nada aqui ainda</div>'}
+        <button class="task-add" data-task-add="${p.key}">${ico('plus','i i-sm')}Nova tarefa</button>
+      </div>
+    </div>`;
+  }).join('');
+  wireTaskDrag();
+}
+
+function taskCard(t){
+  return `<div class="deal task${t.done ? ' task-done' : ''}" draggable="true" data-task="${t.id}">
+    <div class="deal-top">
+      <button class="task-check" data-task-check="${t.id}" title="${t.done ? 'Reabrir' : 'Concluir'}" aria-label="${t.done ? 'Reabrir tarefa' : 'Concluir tarefa'}">${ico(t.done ? 'check' : 'dot','i i-sm')}</button>
+      <div class="deal-n">${esc(t.title)}</div>
+      <button class="deal-menu" data-task-menu="${t.id}" title="Ações" aria-label="Ações da tarefa">${ico('more','i i-sm')}</button>
+    </div>
+    ${t.note ? `<div class="task-note">${esc(t.note)}</div>` : ''}
+    ${t.due_date ? `<div class="deal-due">${ico('clock','i i-sm')} prazo ${dmy(t.due_date)}</div>` : ''}
+  </div>`;
+}
+
+function wireTaskDrag(){
+  let drag = null;
+  document.querySelectorAll('#tasks-board .deal').forEach(el => {
+    el.addEventListener('dragstart', e => { drag = el; el.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+    el.addEventListener('dragend', () => { el.classList.remove('dragging'); drag = null; });
+  });
+  document.querySelectorAll('#tasks-board .col-body').forEach(col => {
+    col.addEventListener('dragover', e => { e.preventDefault(); col.classList.add('over'); });
+    col.addEventListener('dragleave', () => col.classList.remove('over'));
+    col.addEventListener('drop', e => { e.preventDefault(); col.classList.remove('over'); if(drag) moveTask(drag.dataset.task, col.dataset.prio); });
+  });
+}
+
+async function addTask(priority){
+  if(!S.co?.id){ toast('Empresa não carregada.', true); return; }
+  const title = await uiPrompt('Nova tarefa', '', { okText:'Adicionar', placeholder:'o que precisa ser feito?' });
+  if(!title?.trim()) return;
+  const { data, error } = await SB.from('tasks').insert({
+    company_id:S.co.id, title:title.trim(), priority, created_by:S.user?.id ?? null,
+  }).select('*').maybeSingle();
+  if(error || !data){ toast(error?.message || 'Não consegui salvar.', true); return; }
+  S.tasks = [...(S.tasks || []), data]; paintTasks();
+}
+
+async function moveTask(id, priority){
+  const t = (S.tasks || []).find(x => x.id === id);
+  if(!t || t.priority === priority) return;
+  const prev = t.priority; t.priority = priority; paintTasks();
+  const { error } = await SB.from('tasks').update({ priority, updated_at:new Date().toISOString() }).eq('id', id);
+  if(error){ t.priority = prev; paintTasks(); toast(error.message, true); }
+}
+
+async function toggleTaskDone(id){
+  const t = (S.tasks || []).find(x => x.id === id); if(!t) return;
+  const done = !t.done; t.done = done; paintTasks();
+  const { error } = await SB.from('tasks').update({ done, updated_at:new Date().toISOString() }).eq('id', id);
+  if(error){ t.done = !done; paintTasks(); toast(error.message, true); }
+}
+
+async function editTaskTitle(id){
+  const t = (S.tasks || []).find(x => x.id === id); if(!t) return;
+  const title = await uiPrompt('Editar tarefa', t.title, { okText:'Salvar' });
+  if(title == null || !title.trim() || title.trim() === t.title) return;
+  const prev = t.title; t.title = title.trim(); paintTasks();
+  const { error } = await SB.from('tasks').update({ title:t.title, updated_at:new Date().toISOString() }).eq('id', id);
+  if(error){ t.title = prev; paintTasks(); toast(error.message, true); }
+}
+
+async function setTaskDue(id){
+  const t = (S.tasks || []).find(x => x.id === id); if(!t) return;
+  const val = await uiPrompt('Prazo (AAAA-MM-DD, vazio para remover)', t.due_date || '', { okText:'Salvar', placeholder:'2026-08-20' });
+  if(val == null) return;
+  const clean = val.trim();
+  if(clean && !/^\d{4}-\d{2}-\d{2}$/.test(clean)){ toast('Data inválida. Use AAAA-MM-DD.', true); return; }
+  const due_date = clean || null, prev = t.due_date;
+  t.due_date = due_date; paintTasks();
+  const { error } = await SB.from('tasks').update({ due_date, updated_at:new Date().toISOString() }).eq('id', id);
+  if(error){ t.due_date = prev; paintTasks(); toast(error.message, true); }
+}
+
+async function deleteTask(id){
+  const t = (S.tasks || []).find(x => x.id === id); if(!t) return;
+  if(!await uiConfirm(`Apagar "${t.title}"?`, { okText:'Apagar', danger:true })) return;
+  const { error } = await SB.from('tasks').delete().eq('id', id);
+  if(error){ toast(error.message, true); return; }
+  S.tasks = (S.tasks || []).filter(x => x.id !== id); paintTasks();
+}
+
+function openTaskMenu(anchor){
+  closePop();
+  const id = anchor.dataset.taskMenu;
+  const t = (S.tasks || []).find(x => x.id === id); if(!t) return;
+  const pop = document.createElement('div'); pop.className = 'pop';
+  const moves = TASK_PRIOS.filter(p => p.key !== t.priority)
+    .map(p => `<button data-tact="move:${p.key}">${ico('arrow-r','i i-sm')}Mover para ${p.label}</button>`).join('');
+  pop.innerHTML = `
+    <button data-tact="done">${ico('check','i i-sm')}${t.done ? 'Reabrir' : 'Concluir'}</button>
+    <button data-tact="edit">${ico('edit','i i-sm')}Editar</button>
+    <button data-tact="due">${ico('clock','i i-sm')}${t.due_date ? 'Alterar prazo' : 'Definir prazo'}</button>
+    <div class="sep"></div>
+    ${moves}
+    <div class="sep"></div>
+    <button data-tact="del" class="danger">${ico('trash','i i-sm')}Apagar</button>`;
+  document.body.appendChild(pop); placePop(pop, anchor.getBoundingClientRect()); S.pop = pop;
+  pop.querySelectorAll('[data-tact]').forEach(b => b.addEventListener('click', () => {
+    const a = b.dataset.tact; closePop();
+    if(a === 'done') toggleTaskDone(id);
+    else if(a === 'edit') editTaskTitle(id);
+    else if(a === 'due') setTaskDue(id);
+    else if(a === 'del') deleteTask(id);
+    else if(a.startsWith('move:')) moveTask(id, a.slice(5));
+  }));
+  setTimeout(() => document.addEventListener('click', closePop, { once:true }), 0);
+}
+
+document.addEventListener('click', e => {
+  const add = e.target.closest('[data-task-add]'); if(add){ addTask(add.dataset.taskAdd); return; }
+  if(e.target.closest('#tasks-add-top')){ addTask('moderada'); return; }
+  const chk = e.target.closest('[data-task-check]'); if(chk){ toggleTaskDone(chk.dataset.taskCheck); return; }
+  const menu = e.target.closest('[data-task-menu]'); if(menu){ e.stopPropagation(); openTaskMenu(menu); return; }
+});
 
 /* ---- uso diário (barra de limite) ---- */
 async function loadUsage(){
