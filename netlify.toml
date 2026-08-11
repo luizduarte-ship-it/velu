@@ -1,7 +1,7 @@
-# Publica só o index.html (o Netlify copia para dist/ no build).
+# Publica só o index.html e o _headers (o Netlify copia para dist/ no build).
 # Assim CLAUDE.md e outros arquivos do repo não vão para o ar.
 [build]
-  command = "mkdir -p dist && cp index.html dist/index.html"
+  command = "mkdir -p dist && cp index.html dist/index.html && cp _headers dist/_headers"
   publish = "dist"
 
 # Consolida o www no dominio principal (evita certificado/host separado).
