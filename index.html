@@ -243,7 +243,7 @@ textarea.field{height:auto;min-height:84px;padding:9px 11px;resize:vertical;line
 .sales-foot a,.back-link{color:var(--brand-lift);font-weight:600;cursor:pointer;text-decoration:none}
 .back-link{display:inline-block;font-size:12px;margin-bottom:14px}
 /* --- onboarding (primeiro acesso) --- */
-#onboard,#renew,#checkout{position:fixed;inset:0;z-index:200;background:var(--void);display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto}
+#onboard,#renew-gate,#checkout{position:fixed;inset:0;z-index:200;background:var(--void);display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto}
 #checkout{z-index:210}
 .ob-card{width:100%;max-width:460px;background:var(--bg-2);border:1px solid var(--line);border-radius:16px;padding:34px 30px;box-shadow:var(--e2);margin:auto}
 .ob-step{display:none}
@@ -1214,7 +1214,7 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 </div>
 
 <!-- ==================== RENOVAÇÃO (assinatura vencida) ==================== -->
-<div id="renew" style="display:none">
+<div id="renew-gate" style="display:none">
   <div class="ob-card" style="text-align:center">
     <span class="eyebrow">Acesso pausado</span>
     <h1>Sua assinatura venceu</h1>
@@ -1279,9 +1279,9 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 
     <button class="rail-sec" data-sec="comercial" aria-expanded="true">Comercial<svg class="i chev"><use href="#ic-arrow-r"/></svg></button>
     <div class="rail-group" data-group="comercial">
-      <button class="nav" data-view="comp" aria-current="page"><svg class="i"><use href="#ic-radar"/></svg>Concorrentes<span class="nav-count" id="nc-rivals">–</span></button>
-      <button class="nav" data-view="leads"><svg class="i"><use href="#ic-target"/></svg>Leads<span class="nav-count" id="nc-leads">–</span></button>
-      <button class="nav" data-view="pipe"><svg class="i"><use href="#ic-board"/></svg>Pipeline<span class="nav-count" id="nc-pipe">–</span></button>
+      <button class="nav" data-view="comp" aria-current="page"><svg class="i"><use href="#ic-radar"/></svg>Concorrentes<span class="nav-count" id="nc-rivals"></span></button>
+      <button class="nav" data-view="leads"><svg class="i"><use href="#ic-target"/></svg>Leads<span class="nav-count" id="nc-leads"></span></button>
+      <button class="nav" data-view="pipe"><svg class="i"><use href="#ic-board"/></svg>Pipeline<span class="nav-count" id="nc-pipe"></span></button>
       <button class="nav" data-view="dispatch"><svg class="i"><use href="#ic-send"/></svg>Agente de disparo</button>
     </div>
 
@@ -1289,7 +1289,7 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
     <div class="rail-group" data-group="estudio">
       <button class="nav" data-view="code"><svg class="i"><use href="#ic-code"/></svg>Velu Code</button>
       <button class="nav" data-view="image"><svg class="i"><use href="#ic-image"/></svg>Criador de imagem</button>
-      <button class="nav" data-view="skills"><svg class="i"><use href="#ic-plug"/></svg>Skills<span class="nav-count" id="nc-skills">–</span></button>
+      <button class="nav" data-view="skills"><svg class="i"><use href="#ic-plug"/></svg>Skills<span class="nav-count" id="nc-skills"></span></button>
     </div>
 
     <button class="rail-sec" data-sec="criacao" aria-expanded="true">Criação<svg class="i chev"><use href="#ic-arrow-r"/></svg></button>
@@ -1297,7 +1297,7 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
       <button class="nav" data-view="video"><svg class="i"><use href="#ic-video"/></svg>Velu Vídeo</button>
       <button class="nav" data-view="decks"><svg class="i"><use href="#ic-deck"/></svg>Apresentações</button>
       <button class="nav" data-view="prompts"><svg class="i"><use href="#ic-book"/></svg>Biblioteca de prompts</button>
-      <button class="nav" data-view="proj"><svg class="i"><use href="#ic-folder"/></svg>Projetos<span class="nav-count" id="nc-proj">–</span></button>
+      <button class="nav" data-view="proj"><svg class="i"><use href="#ic-folder"/></svg>Projetos<span class="nav-count" id="nc-proj"></span></button>
     </div>
     </div>
 
@@ -1329,9 +1329,9 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
           </div>
           <div class="skill-bar" id="active-skills"></div>
           <div id="hero-top">
-            <div class="ctx"><b id="ctx-co">–</b> <span id="ctx-desc"></span>
+            <div class="ctx"><b id="ctx-co"></b> <span id="ctx-desc"></span>
               <b id="ctx-proj" class="ctx-proj" style="display:none"></b></div>
-            <h1 id="chat-greet">–</h1>
+            <h1 id="chat-greet"></h1>
             <p class="lead" id="mode-lead">Já sei quem é a sua empresa, quem são seus concorrentes e o que foi levantado sobre eles. Pergunte direto.</p>
           </div>
           <div class="thread" id="thread"></div>
@@ -1700,7 +1700,7 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
               <p class="lead">Os leads gerados caem aqui. Arrastar entre colunas atualiza o histórico do contato.</p>
             </div>
             <div style="text-align:right">
-              <div class="num" style="font-size:24px" id="pipe-total">–</div>
+              <div class="num" style="font-size:24px" id="pipe-total"></div>
               <div class="eyebrow" style="margin-top:2px">em negociação</div>
               <button class="btn btn-sm" id="pipe-add" style="margin-top:10px"><svg class="i i-sm"><use href="#ic-plus"/></svg>Adicionar empresa</button>
             </div>
@@ -1903,7 +1903,7 @@ Nada de emoji em material institucional.</textarea>
             <div>Sua empresa tem um acesso, criado pela Velu, com permissão para tudo que a plataforma oferece (dossiês, leads, pipeline, projetos e configuração). Não existe cadastro aberto: é assim que garantimos que só a sua equipe veja os seus dados. Precisa trocar o e-mail ou a senha? Fale com seu contato na Velu.</div>
           </div>
           <div class="card">
-            <div class="card-hd"><h2>Acesso ativo</h2><p class="cap" id="seats">–</p></div>
+            <div class="card-hd"><h2>Acesso ativo</h2><p class="cap" id="seats"></p></div>
             <div id="team"></div>
           </div>
         </div>
@@ -1911,8 +1911,8 @@ Nada de emoji em material institucional.</textarea>
         <div class="set-pane" id="pane-conta">
           <div class="card" style="margin-bottom:14px">
             <div class="card-hd"><h2>Contrato</h2></div>
-            <div class="row"><div><div class="row-t">Plano</div><div class="row-d" id="plan-d">–</div></div><span class="tag tag-g">ativo</span></div>
-            <div class="row"><div><div class="row-t">Renovação</div><div class="row-d" id="renew">–</div></div><span class="num" style="font-size:13px" id="price">–</span></div>
+            <div class="row"><div><div class="row-t">Plano</div><div class="row-d" id="plan-d"></div></div><span class="tag tag-g">ativo</span></div>
+            <div class="row"><div><div class="row-t">Renovação</div><div class="row-d" id="renew"></div></div><span class="num" style="font-size:13px" id="price"></span></div>
             <div class="row"><div><div class="row-t">Gerente de conta</div><div class="row-d">Luiz Duarte · luiz@velu.ia</div></div><button class="btn btn-ghost btn-sm">Falar</button></div>
           </div>
           <div class="card">
@@ -2116,7 +2116,7 @@ const S = { user:null, profile:null, co:null, rivals:[], prompts:[], projects:[]
 
 const $  = s => document.querySelector(s);
 const esc = t => (t ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const brl = n => n == null ? '–' : 'R$ ' + Number(n).toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0});
+const brl = n => n == null ? '' : 'R$ ' + Number(n).toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0});
 const kbrl = n => 'R$ ' + (Number(n)/1000).toLocaleString('pt-BR', {minimumFractionDigits:1, maximumFractionDigits:1}) + 'k';
 const ico = (n, c='i') => `<svg class="${c}"><use href="#ic-${n}"/></svg>`;
 
@@ -2224,7 +2224,7 @@ function mostrarRenovacao(){
   const fim = S.sub?.current_period_end ? new Date(S.sub.current_period_end) : null;
   const dataFim = fim ? fim.toLocaleDateString('pt-BR') : '';
   $('#app').style.display = 'none';
-  const el = $('#renew');
+  const el = $('#renew-gate');
   $('#renew-plan').textContent = nomePlano ? `Plano Velu ${nomePlano}` : 'Sua assinatura';
   $('#renew-when').textContent = dataFim ? `Venceu em ${dataFim}.` : 'Sua assinatura está vencida.';
   el.style.display = 'flex';
@@ -2340,7 +2340,30 @@ async function mountBrick(email){
     brickController = await mpInstance.bricks().create('payment', 'mp-brick', {
       initialization: { amount: coAmount, payer: { email } },
       customization: {
-        visual: { style: { theme: 'dark' }, hideFormTitle: true },
+        visual: {
+          hideFormTitle: true,
+          // cores da marca Velu no formulário do Mercado Pago
+          style: {
+            theme: 'dark',
+            customVariables: {
+              baseColor: '#116CFE',
+              baseColorFirstVariant: '#4E8CFF',
+              baseColorSecondVariant: '#0F1E36',
+              formBackgroundColor: '#1E2127',
+              inputBackgroundColor: '#0B1524',
+              textPrimaryColor: '#F4F3EF',
+              textSecondaryColor: '#C4CDDB',
+              outlinePrimaryColor: '#2C3039',
+              outlineSecondaryColor: '#2C3039',
+              buttonTextColor: '#FFFFFF',
+              successColor: '#3FB77E',
+              errorColor: '#E5484D',
+              borderRadiusSmall: '6px',
+              borderRadiusMedium: '9px',
+              borderRadiusLarge: '12px',
+            },
+          },
+        },
         // assinatura mensal: cobranca a vista, sem parcelamento (some a lista de parcelas)
         paymentMethods: { creditCard:'all', debitCard:'all', ticket:'all', bankTransfer:'all', maxInstallments: 1 },
       },
@@ -2811,7 +2834,7 @@ function paintRivals(){
         <div class="threat" style="${r.threat>70?'color:var(--dn)':''}">${r.threat}<small>/100</small></div>
       </div>
       <div class="gauge ${r.threat>70?'hi':''}">${[0,1,2,3,4].map(i=>`<i class="${i<filled?'f':''}"></i>`).join('')}</div>
-      <div class="rival-f"><span data-gap="${r.id}">–</span><span class="go">${ico('arrow-r','i i-sm')}</span></div>
+      <div class="rival-f"><span data-gap="${r.id}"></span><span class="go">${ico('arrow-r','i i-sm')}</span></div>
     </button>`;
   }).join('');
 
@@ -2847,14 +2870,14 @@ async function paintTable(){
     co: S.co.name, you:true,
     seo: band(you ? (dims.find(d => seo(d.label))?.you ?? 0) : 0),
     social: band(dims.find(d => soc(d.label))?.you ?? 0),
-    lang: S.co.tone ?? '–', hi: 'Credibilidade'
+    lang: S.co.tone ?? '', hi: 'Credibilidade'
   }, ...S.rivals.map(r => {
     const d = (dims ?? []).filter(x => x.competitor_id === r.id);
     return {
       co: r.name,
       seo: band(d.find(x => seo(x.label))?.them ?? 0),
       social: band(d.find(x => soc(x.label))?.them ?? 0),
-      lang: r.tier ?? '–',
+      lang: r.tier ?? '',
       hi: (r.positioning ?? '').split(' ').slice(0,2).join(' ')
     };
   })];
@@ -2865,7 +2888,7 @@ async function paintTable(){
       <td><span class="tag ${HEAT[r.seo]||''}">${r.seo}</span></td>
       <td><span class="tag ${HEAT[r.social]||''}">${r.social}</span></td>
       <td>${esc(r.lang)}</td>
-      <td>${r.you ? '–' : `<span class="num">${S.rivals[i-1].threat}</span>`}</td>
+      <td>${r.you ? '' : `<span class="num">${S.rivals[i-1].threat}</span>`}</td>
     </tr>`).join('')}</tbody>`;
 
   /* ganchos e oportunidades saem das lacunas de todo mundo */
@@ -2895,7 +2918,7 @@ async function openDossier(id){
   const by = k => (notes ?? []).filter(n => n.kind === k);
   const gaps = by('lacuna'), real = gaps.filter(g => !/^(Nada|Nenhuma)/.test(g.title ?? ''));
   const co = S.co.name;
-  const dt = d => d ? new Date(d).toLocaleDateString('pt-BR') : '–';
+  const dt = d => d ? new Date(d).toLocaleDateString('pt-BR') : '';
 
   $('#dossier').innerHTML = `
     <div class="page-hd">
@@ -3552,7 +3575,7 @@ function paintProjects(){
       <div class="proj-ic">${ico('folder','i')}</div>
       <div class="proj-n">${esc(p.name)}</div>
       <div class="proj-d">${esc(p.description ?? '')}</div>
-      <div class="proj-m"><span>${S.files.length} arquivos</span><span class="conv-${p.id}">–</span>
+      <div class="proj-m"><span>${S.files.length} arquivos</span><span class="conv-${p.id}"></span>
         <span style="margin-left:auto">${new Date(p.updated_at).toLocaleDateString('pt-BR')}</span></div>
     </button>`).join('') +
     `<button class="dashed" id="new-proj">${ico('plus','i i-lg')}<span>Novo projeto</span></button>`;
@@ -3606,7 +3629,7 @@ function paintSettings(){
 
   $('#set-rivals').innerHTML = S.rivals.map(r => `
     <div class="row"><div><div class="row-t">${esc(r.name)}</div>
-      <div class="row-d">${esc(r.tier ?? '')} · coleta ${r.collected_at ? new Date(r.collected_at).toLocaleDateString('pt-BR') : '–'}</div></div>
+      <div class="row-d">${esc(r.tier ?? '')} · coleta ${r.collected_at ? new Date(r.collected_at).toLocaleDateString('pt-BR') : ''}</div></div>
     <span class="tag ${r.status==='publicado'?'tag-g':'tag-a'}">${r.status}</span></div>`).join('');
 
   $('#files').innerHTML = S.files.length ? S.files.map(f => `
@@ -3625,7 +3648,7 @@ function paintSettings(){
   $('#seats').textContent = 'Um acesso por empresa, sem restrição de área.';
   $('#plan-d').textContent = `${co.plan} · 1 acesso · concorrentes ilimitados`;
   $('#price').textContent = brl(co.price_monthly) + ' / mês';
-  $('#renew').textContent = co.renews_on ? 'Anual, próxima em ' + new Date(co.renews_on + 'T12:00').toLocaleDateString('pt-BR', {day:'numeric', month:'long', year:'numeric'}) : '–';
+  $('#renew').textContent = co.renews_on ? 'Anual, próxima em ' + new Date(co.renews_on + 'T12:00').toLocaleDateString('pt-BR', {day:'numeric', month:'long', year:'numeric'}) : '';
 }
 
 /* ============================================================ MEMÓRIA CONTÍNUA ============================================================ */
@@ -4219,7 +4242,7 @@ function paintSkills(cat){
     ? list.map(s => {
       const on = S.activeSkills.has(s.id);
       return `<button class="skill ${on?'on':''}" data-skill="${s.id}">
-        <div class="skill-c">${esc(s.category ?? '–')}</div>
+        <div class="skill-c">${esc(s.category ?? '')}</div>
         <div class="skill-n">${esc(s.name)}</div>
         <div class="skill-d">${esc(s.description ?? '')}</div>
         <div class="skill-t"><span class="dot"></span>${on ? 'Ativada' : 'Ativar nesta conversa'}</div>
