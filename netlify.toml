@@ -1,7 +1,9 @@
 # Build: ofusca (minifica + embaralha) o JS inline do index.html e publica em dist/
-# junto com _headers e robots.txt (ver build.js). CLAUDE.md e o resto ficam de fora.
+# junto com _headers e robots.txt (ver build.js). Se o build falhar por qualquer
+# motivo, cai no fallback que publica os arquivos crus (mantendo os headers de
+# seguranca). CLAUDE.md e o resto do repo ficam de fora.
 [build]
-  command = "node build.js"
+  command = "npm install --no-audit --no-fund && node build.js || (echo 'fallback sem ofuscacao' && mkdir -p dist && cp index.html dist/index.html && cp _headers dist/_headers && cp robots.txt dist/robots.txt)"
   publish = "dist"
 
 # Consolida o www no dominio principal (evita certificado/host separado).
