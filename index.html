@@ -2184,17 +2184,41 @@ function toast(msg, bad){
 }
 
 /* ============================================================ AUTH ============================================================ */
+/* Rate limit de login: apos 5 senhas erradas, bloqueia por 15 min e manda falar
+   com o suporte. Guarda no localStorage (por navegador). Reforca a protecao que o
+   Supabase Auth ja faz no servidor. */
+const LOGIN_LOCK_KEY = 'velu_login_lock', LOGIN_MAX_FAILS = 5, LOGIN_LOCK_MS = 15 * 60 * 1000;
+function loginLockState(){ try { return JSON.parse(localStorage.getItem(LOGIN_LOCK_KEY)) || { fails:0, until:0 }; } catch { return { fails:0, until:0 }; } }
+function setLoginLock(s){ try { localStorage.setItem(LOGIN_LOCK_KEY, JSON.stringify(s)); } catch {} }
+function clearLoginLock(){ try { localStorage.removeItem(LOGIN_LOCK_KEY); } catch {} }
+function loginLockedMsg(until){
+  const min = Math.max(1, Math.ceil((until - Date.now()) / 60000));
+  return `Muitas tentativas de senha. Por segurança, o acesso ficou bloqueado por ${min} min. Se precisar de ajuda, fale com o suporte: contatovelucrm@gmail.com`;
+}
+
 async function login(){
-  const btn = $('#enter'), email = $('#u').value.trim(), pass = $('#p').value;
+  const btn = $('#enter'), email = $('#u').value.trim(), pass = $('#p').value, err = $('#err');
+  const lock = loginLockState();
+  if(lock.until && Date.now() < lock.until){ err.textContent = loginLockedMsg(lock.until); err.style.display = 'block'; return; }
   try { localStorage.setItem(REMEMBER_KEY, $('#remember')?.checked ? '1' : '0'); } catch {}
   btn.disabled = true; btn.textContent = 'Entrando…';
   const { data, error } = await SB.auth.signInWithPassword({ email, password: pass });
   btn.disabled = false; btn.textContent = 'Entrar';
   if(error){
-    $('#err').textContent = error.message.includes('Invalid') ? 'E-mail ou senha incorretos.' : error.message;
-    $('#err').style.display = 'block';
+    const st = loginLockState(); st.fails = (st.fails || 0) + 1;
+    if(st.fails >= LOGIN_MAX_FAILS){
+      st.until = Date.now() + LOGIN_LOCK_MS; setLoginLock(st);
+      err.textContent = loginLockedMsg(st.until);
+    } else {
+      setLoginLock(st);
+      const rest = LOGIN_MAX_FAILS - st.fails;
+      const base = error.message.includes('Invalid') ? 'E-mail ou senha incorretos.' : error.message;
+      err.textContent = `${base} (${rest} tentativa${rest > 1 ? 's' : ''} restante${rest > 1 ? 's' : ''})`;
+    }
+    err.style.display = 'block';
     return;
   }
+  clearLoginLock();
   S.user = data.user;
   await enter();
 }
