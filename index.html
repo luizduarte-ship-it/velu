@@ -2340,8 +2340,9 @@ async function mountBrick(email){
     brickController = await mpInstance.bricks().create('payment', 'mp-brick', {
       initialization: { amount: coAmount, payer: { email } },
       customization: {
-        visual: { style: { theme: 'dark' } },
-        paymentMethods: { creditCard:'all', debitCard:'all', ticket:'all', bankTransfer:'all', maxInstallments: 12 },
+        visual: { style: { theme: 'dark' }, hideFormTitle: true },
+        // assinatura mensal: cobranca a vista, sem parcelamento (some a lista de parcelas)
+        paymentMethods: { creditCard:'all', debitCard:'all', ticket:'all', bankTransfer:'all', maxInstallments: 1 },
       },
       callbacks: {
         onReady: () => {},
