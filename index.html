@@ -1054,6 +1054,63 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
   .tr>:nth-child(2),.tr>:nth-child(3){display:none}
 }
 
+/* ============================================================ FASE 1 · TELA DE VENDAS/LOGIN EM APPLE CLARO ============================================================
+   Escopado 100% em #login: nao altera o resto do app (que segue dark) nem a logica (planos, toggle, entrar). */
+#login{
+  --al-bg:#f5f5f7; --al-panel:#fff; --al-panel2:#fbfbfd;
+  --al-text:#1d1d1f; --al-text2:#6e6e73; --al-text3:#86868b;
+  --al-line:rgba(0,0,0,.1); --al-line2:rgba(0,0,0,.06);
+  --al-accent:#0071e3; --al-accent2:#0077ed; --al-green:#34c759; --al-red:#d70015;
+  --al-ease:cubic-bezier(.32,.72,0,1);
+  background:var(--al-bg); color:var(--al-text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+#login .login-art{background:linear-gradient(180deg,#fbfbfd 0%,#eef0f4 100%);border-right:1px solid var(--al-line2)}
+#login .login-art::before,#login .login-art::after,#login .login-art canvas,#login .login-tick{display:none!important}
+#login .wordmark{filter:brightness(0);opacity:.9;height:32px}
+#login .login-art h2.display{color:var(--al-text);text-shadow:none;letter-spacing:-.03em;font-weight:600}
+#login .login-art .acc,#login .acc{color:var(--al-accent)}
+#login .login-art .lead{color:var(--al-text2)}
+#login .login-art>p{color:var(--al-text3)!important}
+
+#login .login-form{background:var(--al-bg);border-left:1px solid var(--al-line2)}
+#login .login-form h1{color:var(--al-text);font-weight:600;letter-spacing:-.025em;font-size:30px}
+#login .sales-sub{color:var(--al-text2);font-size:14px}
+#login .sales-foot{color:var(--al-text3)}
+#login .sales-foot a,#login .back-link{color:var(--al-accent);font-weight:500}
+#login #signin-panel p{color:var(--al-text2)!important}
+
+/* planos, estilo Apple (cartao branco, cantos suaves, hover que levanta) */
+#login .plan{background:var(--al-panel);border:1px solid var(--al-line2);border-radius:18px;padding:22px 20px;box-shadow:0 4px 20px rgba(0,0,0,.06);transition:transform .4s var(--al-ease),box-shadow .4s var(--al-ease)}
+#login .plan:hover{transform:translateY(-4px);box-shadow:0 20px 50px rgba(0,0,0,.13)}
+#login .plan.hot{border-color:transparent;box-shadow:0 0 0 2px var(--al-accent),0 20px 50px rgba(0,0,0,.13)}
+#login .plan-name{color:var(--al-text);font-weight:600}
+#login .plan-tag{color:var(--al-text3)}
+#login .plan-price{color:var(--al-text);font-weight:600;font-size:30px}
+#login .plan-price span{color:var(--al-text3)}
+#login .plan-feats li{color:var(--al-text2)}
+#login .plan-feats li.ok::before{color:var(--al-green)}
+#login .plan-feats li.no,#login .plan-feats li.no::before{color:var(--al-text3)}
+#login .plan-feats li.lim,#login .plan-feats li.lim::before{color:var(--al-text3)}
+#login .plan-badge{background:var(--al-accent);box-shadow:0 3px 10px rgba(0,113,227,.35)}
+
+/* botoes pilula da Apple */
+#login .btn{background:var(--al-accent);color:#fff;border:none;border-radius:980px;box-shadow:none;font-weight:500;transition:transform .3s var(--al-ease),background .25s var(--al-ease)}
+#login .btn::after{display:none!important}
+#login .btn:hover{background:var(--al-accent2);transform:scale(1.02);box-shadow:none;filter:none}
+#login .btn-ghost{background:var(--al-panel);color:var(--al-accent);border:1px solid var(--al-line)}
+#login .btn-ghost:hover{background:#eef0f4;color:var(--al-accent2)}
+#login #enter{border-radius:980px}
+
+/* formulario de entrar */
+#login .login-form .field{background:var(--al-panel);border:1px solid var(--al-line);color:var(--al-text);border-radius:12px}
+#login .login-form .field:hover{border-color:var(--al-text3)}
+#login .login-form .field:focus{background:var(--al-panel);border-color:var(--al-accent);box-shadow:0 0 0 4px rgba(0,113,227,.16)}
+#login .lbl{color:var(--al-text2)}
+#login .remember{color:var(--al-text2)}
+#login .remember input{accent-color:var(--al-accent)}
+#login .login-err{color:var(--al-red);background:rgba(215,0,21,.08);border-color:rgba(215,0,21,.22)}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://sdk.mercadopago.com/js/v2"></script>
