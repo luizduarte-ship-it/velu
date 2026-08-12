@@ -689,9 +689,7 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 .faq summary:hover{background:var(--panel-2)}
 .faq p{margin:0;padding:2px 18px 16px;font-size:13px;color:var(--tx-2);line-height:1.6}
 .faq[open] summary{background:var(--panel-2)}
-.faq[open]>p{animation:faqOpen .3s var(--ease)}
-@keyframes faqOpen{from{opacity:0;transform:translateY(-7px)}to{opacity:1;transform:none}}
-@media(prefers-reduced-motion:reduce){.faq[open]>p{animation:none}}
+.faq>p{will-change:height}
 @media(max-width:820px){.sp-grid{grid-template-columns:1fr}}
 
 /* ---- Inspirações do chat (IA) ---- */
@@ -1240,6 +1238,32 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 .lp-reveal.in{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){.lp-reveal{opacity:1;transform:none;transition:none}}
 @media(max-width:860px){.lp-grid{grid-template-columns:1fr}.lp-links{display:none}.lp-mini{grid-template-columns:1fr}.lp-band-cards{grid-template-columns:1fr}}
+
+/* ===== CHECKOUT no mesmo estilo claro do painel "Entrar" ===== */
+#checkout{
+  --al-panel:#fff; --al-text:#1d1d1f; --al-text2:#6e6e73; --al-text3:#86868b;
+  --al-line:rgba(0,0,0,.1); --al-line2:rgba(0,0,0,.06);
+  --al-accent:#0071e3; --al-accent2:#0077ed; --al-red:#d70015; --al-ease:cubic-bezier(.32,.72,0,1);
+  background:rgba(0,0,0,.4);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  animation:ovIn .28s var(--al-ease);
+}
+#checkout .co-card{background:#fff;border:1px solid var(--al-line2);border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.28);color:var(--al-text);animation:cardIn .4s var(--al-ease)}
+#checkout .eyebrow{color:var(--al-accent)}
+#checkout h1{color:var(--al-text)}
+#checkout .ob-sub{color:var(--al-text2)}
+#checkout .lbl{color:var(--al-text2)}
+#checkout .field{background:var(--al-panel);border:1px solid var(--al-line);color:var(--al-text);border-radius:12px;height:44px}
+#checkout .field::placeholder{color:var(--al-text3)}
+#checkout .field:hover{border-color:var(--al-text3)}
+#checkout .field:focus{border-color:var(--al-accent);box-shadow:0 0 0 4px rgba(0,113,227,.16)}
+#checkout .btn{background:var(--al-accent);border:none;border-radius:980px;box-shadow:none;color:#fff;font-weight:500;transition:transform .3s var(--al-ease),background .2s var(--al-ease)}
+#checkout .btn::after{display:none!important}
+#checkout .btn:hover{background:var(--al-accent2);transform:scale(1.02);box-shadow:none;filter:none}
+#checkout .co-x{color:var(--al-text3)}
+#checkout .co-x:hover{color:var(--al-text);background:#f0f0f3}
+#checkout .back-link{color:var(--al-accent)}
+#checkout .login-err{color:var(--al-red);background:rgba(215,0,21,.08);border:1px solid rgba(215,0,21,.22);border-radius:10px;padding:9px 12px}
+@media(prefers-reduced-motion:reduce){#checkout,#checkout .co-card{animation:none}}
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -2682,6 +2706,43 @@ document.querySelectorAll('.plan-buy').forEach(b => b.addEventListener('click', 
       e.preventDefault();
       const top = target.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop - 64;
       scroller.scrollTo({ top: Math.max(0, top), behavior: calm ? 'auto' : 'smooth' });
+    });
+  });
+})();
+
+/* FAQ com abertura/fechamento suave (altura animada, sem empurrão seco na página) */
+(function(){
+  const DUR = 300;
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll('.faq').forEach(d => {
+    const sum = d.querySelector('summary');
+    const p = d.querySelector('p');
+    if(!sum || !p) return;
+    sum.addEventListener('click', (e) => {
+      if(calm) return;                 // sem animação: comportamento nativo
+      e.preventDefault();
+      if(d.dataset.anim) return;        // ignora cliques durante a transição
+      d.dataset.anim = '1';
+      p.style.overflow = 'hidden';
+      const done = () => { p.style.transition=''; p.style.height=''; p.style.paddingTop=''; p.style.paddingBottom=''; p.style.opacity=''; p.style.overflow=''; delete d.dataset.anim; };
+      const tr = `height ${DUR}ms var(--ease), padding ${DUR}ms var(--ease), opacity ${DUR}ms var(--ease)`;
+      if(!d.open){
+        d.open = true;
+        const cs = getComputedStyle(p);
+        const padT = cs.paddingTop, padB = cs.paddingBottom, full = p.scrollHeight;
+        p.style.height='0px'; p.style.paddingTop='0px'; p.style.paddingBottom='0px'; p.style.opacity='0';
+        p.getBoundingClientRect();     // força reflow para a transição valer
+        p.style.transition = tr;
+        p.style.height = full+'px'; p.style.paddingTop=padT; p.style.paddingBottom=padB; p.style.opacity='1';
+        setTimeout(done, DUR+40);
+      } else {
+        const cs = getComputedStyle(p);
+        p.style.height=p.scrollHeight+'px'; p.style.paddingTop=cs.paddingTop; p.style.paddingBottom=cs.paddingBottom; p.style.opacity='1';
+        p.getBoundingClientRect();
+        p.style.transition = tr;
+        p.style.height='0px'; p.style.paddingTop='0px'; p.style.paddingBottom='0px'; p.style.opacity='0';
+        setTimeout(() => { d.open=false; done(); }, DUR+40);
+      }
     });
   });
 })();
