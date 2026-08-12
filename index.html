@@ -1066,9 +1066,10 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;
 }
 #login .login-art{background:linear-gradient(180deg,#fbfbfd 0%,#eef0f4 100%);border-right:1px solid var(--al-line2)}
-#login .login-art::before,#login .login-art::after,#login .login-art canvas,#login .login-tick{display:none!important}
+#login .login-art::before,#login .login-art::after,#login .login-tick{display:none!important}
+#login #net{opacity:.72}
 #login .wordmark{filter:brightness(0);opacity:.9;height:32px}
-#login .login-art h2.display{color:var(--al-text);text-shadow:none;letter-spacing:-.03em;font-weight:600}
+#login .login-art h2.display{color:var(--al-text);text-shadow:none;letter-spacing:-.03em;font-weight:600;max-width:22ch;font-size:clamp(34px,4.2vw,52px);line-height:1.05;text-wrap:balance}
 #login .login-art .acc,#login .acc{color:var(--al-accent)}
 #login .login-art .lead{color:var(--al-text2)}
 #login .login-art>p{color:var(--al-text3)!important}
@@ -2125,9 +2126,9 @@ Nada de emoji em material institucional.</textarea>
       const depth = (a.Z+b.Z)/2;
       const near = (depth + R)/(R*2);              // 0 fundo, 1 frente
       const fade = (1 - e.d/LINK);
-      const al = 0.05 + near*0.30*fade;
-      ctx.strokeStyle = `rgba(78,140,255,${al.toFixed(3)})`;
-      ctx.lineWidth = 0.4 + near*0.7;
+      const al = 0.06 + near*0.34*fade;
+      ctx.strokeStyle = `rgba(0,113,227,${al.toFixed(3)})`;
+      ctx.lineWidth = 0.5 + near*0.8;
       ctx.beginPath(); ctx.moveTo(a.X,a.Y); ctx.lineTo(b.X,b.Y); ctx.stroke();
     }
 
@@ -2139,8 +2140,8 @@ Nada de emoji em material institucional.</textarea>
       const x = a.X + (b.X-a.X)*p.t, y = a.Y + (b.Y-a.Y)*p.t;
       const near = ((a.Z+b.Z)/2 + R)/(R*2);
       const g = ctx.createRadialGradient(x,y,0,x,y,7);
-      g.addColorStop(0, `rgba(160,200,255,${(0.5+near*0.45).toFixed(3)})`);
-      g.addColorStop(1, 'rgba(160,200,255,0)');
+      g.addColorStop(0, `rgba(0,113,227,${(0.5+near*0.45).toFixed(3)})`);
+      g.addColorStop(1, 'rgba(0,113,227,0)');
       ctx.fillStyle = g;
       ctx.beginPath(); ctx.arc(x,y,7,0,7); ctx.fill();
     }
@@ -2156,14 +2157,14 @@ Nada de emoji em material institucional.</textarea>
 
       if(n.hub){
         const g = ctx.createRadialGradient(p.X,p.Y,0,p.X,p.Y,rad*5);
-        g.addColorStop(0, `rgba(78,140,255,${(al*0.42).toFixed(3)})`);
-        g.addColorStop(1, 'rgba(78,140,255,0)');
+        g.addColorStop(0, `rgba(0,113,227,${(al*0.42).toFixed(3)})`);
+        g.addColorStop(1, 'rgba(0,113,227,0)');
         ctx.fillStyle = g;
         ctx.beginPath(); ctx.arc(p.X,p.Y,rad*5,0,7); ctx.fill();
       }
       ctx.fillStyle = n.hub
-        ? `rgba(210,228,255,${al.toFixed(3)})`
-        : `rgba(78,140,255,${(al*0.92).toFixed(3)})`;
+        ? `rgba(0,87,184,${al.toFixed(3)})`
+        : `rgba(0,113,227,${(al*0.9).toFixed(3)})`;
       ctx.beginPath(); ctx.arc(p.X,p.Y,rad,0,7); ctx.fill();
     }
 
