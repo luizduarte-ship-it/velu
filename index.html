@@ -688,6 +688,10 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 .faq[open] summary::after{transform:rotate(45deg)}
 .faq summary:hover{background:var(--panel-2)}
 .faq p{margin:0;padding:2px 18px 16px;font-size:13px;color:var(--tx-2);line-height:1.6}
+.faq[open] summary{background:var(--panel-2)}
+.faq[open]>p{animation:faqOpen .3s var(--ease)}
+@keyframes faqOpen{from{opacity:0;transform:translateY(-7px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.faq[open]>p{animation:none}}
 @media(max-width:820px){.sp-grid{grid-template-columns:1fr}}
 
 /* ---- Inspirações do chat (IA) ---- */
@@ -1149,9 +1153,10 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 .lp-nav{position:sticky;top:0;z-index:60;background:rgba(251,251,253,.8);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--al-line2)}
 .lp-nav-in{max-width:1080px;margin:0 auto;height:54px;display:flex;align-items:center;gap:20px;padding:0 24px}
 .lp-logo{filter:brightness(0);opacity:.9;height:24px;width:auto}
-.lp-links{display:flex;gap:26px;margin-left:12px;font-size:13.5px;color:var(--al-text2)}
-.lp-links a{cursor:pointer;transition:color .2s var(--al-ease)}
-.lp-links a:hover{color:var(--al-text)}
+.lp-links{display:flex;gap:8px;margin-left:12px}
+.lp-links a{cursor:pointer;font-size:13px;font-weight:500;text-decoration:none;color:var(--al-text2);padding:7px 15px;border-radius:980px;background:rgba(0,0,0,.05);transition:background .2s var(--al-ease),color .2s var(--al-ease),transform .2s var(--al-ease)}
+.lp-links a:hover{color:var(--al-text);background:rgba(0,0,0,.09);transform:translateY(-1px)}
+#login [id^="lp-"]{scroll-margin-top:72px}
 .lp-nav-cta{margin-left:auto;display:flex;align-items:center;gap:14px}
 .lp-ghost{background:none;border:none;color:var(--al-accent);font-size:13.5px;font-weight:500;cursor:pointer;font-family:inherit;padding:0}
 .lp-ghost:hover{color:var(--al-accent2)}
@@ -1170,8 +1175,15 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 .lp-link-arrow:hover{gap:7px;color:var(--al-accent2)}
 .lp-band{background:#fff;border-top:1px solid var(--al-line2);border-bottom:1px solid var(--al-line2)}
 .lp-band-in{max-width:820px;margin:0 auto;padding:66px 24px;text-align:center}
-.lp-band-in h2{font-size:clamp(24px,3.4vw,34px);font-weight:600;letter-spacing:-.02em;color:var(--al-text);margin:0 0 14px;text-wrap:balance}
-.lp-band-in p{font-size:17px;color:var(--al-text2);line-height:1.55;margin:0}
+.lp-band-in h2{font-size:clamp(24px,3.4vw,34px);font-weight:600;letter-spacing:-.02em;color:var(--al-text);margin:0 0 16px;text-wrap:balance}
+.lp-band-in p{font-size:17px;color:var(--al-text2);line-height:1.6;margin:0 0 16px}
+.lp-band-in p:last-of-type{margin-bottom:0}
+.lp-band-eyebrow{font-size:14px;font-weight:600;color:var(--al-accent)!important;margin:0 0 10px!important;letter-spacing:.01em}
+.lp-band-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:36px;text-align:left}
+.lp-bc{background:var(--al-panel);border:1px solid var(--al-line2);border-radius:16px;padding:20px 22px;transition:transform .35s var(--al-ease),box-shadow .35s var(--al-ease)}
+.lp-bc:hover{transform:translateY(-3px);box-shadow:0 14px 36px rgba(0,0,0,.08)}
+.lp-bc h3{font-size:15.5px!important;font-weight:600;color:var(--al-text)!important;margin:0 0 6px!important;letter-spacing:-.01em}
+.lp-bc p{font-size:13.5px!important;color:var(--al-text2);line-height:1.55;margin:0!important}
 .lp-sec{max-width:1080px;margin:0 auto;padding:66px 24px}
 .lp-sec-h{text-align:center;margin-bottom:42px}
 .lp-sec-h h2{font-size:clamp(28px,4vw,44px);letter-spacing:-.025em;font-weight:600;margin:0;color:var(--al-text);text-wrap:balance}
@@ -1208,15 +1220,26 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 .lp-foot .lp-pill{margin-bottom:16px}
 .lp-foot-links{font-size:13px;color:var(--al-text3);margin-top:6px}
 .lp-foot-links a{color:var(--al-accent)}
-.signin-ov{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.4);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:24px}
-.signin-card{position:relative;width:100%;max-width:400px;background:#fff;border:1px solid var(--al-line2);border-radius:20px;padding:34px 30px;box-shadow:0 30px 80px rgba(0,0,0,.28)}
+.signin-ov{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.4);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:24px;animation:ovIn .28s var(--al-ease)}
+.signin-card{position:relative;width:100%;max-width:400px;background:#fff;border:1px solid var(--al-line2);border-radius:20px;padding:34px 30px;box-shadow:0 30px 80px rgba(0,0,0,.28);animation:cardIn .4s var(--al-ease)}
+@keyframes ovIn{from{opacity:0}to{opacity:1}}
+@keyframes cardIn{from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.signin-ov,.signin-card{animation:none}}
 .signin-card h1{color:var(--al-text);font-weight:600;letter-spacing:-.025em;font-size:26px;margin:0 0 4px}
 .signin-card .co-x{color:var(--al-text3)}
 .signin-card .co-x:hover{color:var(--al-text);background:#f0f0f3}
+.signin-card .field{width:100%;background:var(--al-panel);border:1px solid var(--al-line);color:var(--al-text);border-radius:12px}
+.signin-card .field::placeholder{color:var(--al-text3)}
+.signin-card .field:hover{border-color:var(--al-text3)}
+.signin-card .field:focus{background:var(--al-panel);border-color:var(--al-accent);box-shadow:0 0 0 4px rgba(0,113,227,.16);outline:none}
+.signin-card .lbl{display:block;margin-bottom:6px;color:var(--al-text2)}
+.signin-card .remember{display:flex;align-items:center;gap:8px;margin-top:14px;color:var(--al-text2)}
+.signin-card .remember input{accent-color:var(--al-accent)}
+.signin-card .login-err{color:var(--al-red);background:rgba(215,0,21,.08);border:1px solid rgba(215,0,21,.22);border-radius:10px;padding:9px 12px;margin-top:14px}
 .lp-reveal{opacity:0;transform:translateY(24px);transition:opacity .7s var(--al-ease),transform .7s var(--al-ease)}
 .lp-reveal.in{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){.lp-reveal{opacity:1;transform:none;transition:none}}
-@media(max-width:860px){.lp-grid{grid-template-columns:1fr}.lp-links{display:none}.lp-mini{grid-template-columns:1fr}}
+@media(max-width:860px){.lp-grid{grid-template-columns:1fr}.lp-links{display:none}.lp-mini{grid-template-columns:1fr}.lp-band-cards{grid-template-columns:1fr}}
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -1296,8 +1319,15 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
     </header>
 
     <section class="lp-band"><div class="lp-band-in lp-reveal">
-      <h2>Quem é a Velu</h2>
+      <p class="lp-band-eyebrow">Quem é a Velu</p>
+      <h2>A sócia de vendas que não dorme</h2>
       <p>A Velu junta CRM e inteligência artificial num lugar só. Ela conhece a sua empresa, acha clientes na base pública de CNPJ, organiza o pipeline e responde como alguém de dentro do seu time. Feita para pequenas e médias empresas venderem mais sem precisar contratar mais gente.</p>
+      <p>Ela nasceu de uma ideia simples: a maioria das empresas perde venda não por falta de esforço, e sim por falta de organização e da informação certa na hora certa. A Velu resolve isso reunindo prospecção, atendimento e gestão comercial num só assistente, que trabalha com o seu contexto o dia inteiro.</p>
+      <div class="lp-band-cards">
+        <div class="lp-bc"><h3>IA de verdade</h3><p>Roda nos modelos mais avançados da Anthropic, sempre com o contexto e o tom de voz da sua empresa.</p></div>
+        <div class="lp-bc"><h3>Feita no Brasil</h3><p>Pensada para o jeito brasileiro de vender: em português, do CNPJ ao boleto.</p></div>
+        <div class="lp-bc"><h3>Cada empresa isolada</h3><p>Multiempresa e segura. Seus dados, leads e conversas nunca se misturam com os de outro cliente.</p></div>
+      </div>
     </div></section>
 
     <section class="lp-sec" id="lp-features">
@@ -2640,6 +2670,21 @@ $('#to-signin')?.addEventListener('click', () => { showSignin(true); setTimeout(
 $('#to-signin-2')?.addEventListener('click', () => { showSignin(true); setTimeout(() => $('#u')?.focus(), 60); });
 $('#to-sales')?.addEventListener('click', () => showSignin(false));
 document.querySelectorAll('.plan-buy').forEach(b => b.addEventListener('click', () => openCheckout(b.dataset.plan)));
+
+/* rolagem suave nos links de ancora da landing (nav + botoes "Ver os planos"/"Assinar") */
+(function(){
+  const scroller = $('#login');
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll('#login a[href^="#lp-"]').forEach(a => {
+    a.addEventListener('click', (e) => {
+      const target = document.querySelector(a.getAttribute('href'));
+      if(!target || !scroller) return;
+      e.preventDefault();
+      const top = target.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop - 64;
+      scroller.scrollTo({ top: Math.max(0, top), behavior: calm ? 'auto' : 'smooth' });
+    });
+  });
+})();
 
 /* revela seções da landing conforme entram na viewport */
 (function(){
