@@ -1162,7 +1162,8 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 .lp-pill:hover{background:var(--al-accent2);transform:scale(1.03);color:#fff}
 .lp-pill.big{font-size:16px;padding:12px 26px}
 .lp-hero{position:relative;overflow:hidden;text-align:center;padding:84px 24px 60px}
-.lp-hero #net{position:absolute;top:46%;left:50%;transform:translate(-50%,-50%);width:min(122%,880px);aspect-ratio:1;opacity:.6;pointer-events:none;z-index:0;-webkit-mask-image:radial-gradient(circle at 50% 50%,#000 48%,transparent 76%);mask-image:radial-gradient(circle at 50% 50%,#000 48%,transparent 76%)}
+.lp-hero #net{position:absolute;top:46%;left:50%;transform:translate(-50%,-50%);width:min(122%,880px);aspect-ratio:1;opacity:.92;pointer-events:none;z-index:0;-webkit-mask-image:radial-gradient(circle at 50% 50%,#000 62%,transparent 88%);mask-image:radial-gradient(circle at 50% 50%,#000 62%,transparent 88%)}
+#login.dark .lp-hero #net{opacity:1}
 .lp-hero-in{position:relative;z-index:1;max-width:780px;margin:0 auto}
 .lp-eyebrow{font-size:15px;font-weight:600;color:var(--al-accent);margin:0 0 14px}
 .lp-h1{font-size:clamp(38px,6.4vw,68px);line-height:1.04;letter-spacing:-.03em;font-weight:600;margin:0;text-wrap:balance;color:var(--al-text)}
@@ -2463,9 +2464,9 @@ Nada de emoji em material institucional.</textarea>
       const depth = (a.Z+b.Z)/2;
       const near = (depth + R)/(R*2);              // 0 fundo, 1 frente
       const fade = (1 - e.d/LINK);
-      const al = 0.06 + near*0.34*fade;
+      const al = 0.10 + near*0.48*fade;
       ctx.strokeStyle = `rgba(0,113,227,${al.toFixed(3)})`;
-      ctx.lineWidth = 0.5 + near*0.8;
+      ctx.lineWidth = 0.6 + near*0.9;
       ctx.beginPath(); ctx.moveTo(a.X,a.Y); ctx.lineTo(b.X,b.Y); ctx.stroke();
     }
 
