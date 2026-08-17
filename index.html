@@ -556,8 +556,9 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 .th:hover{background:var(--void)!important}
 .tr-name{font-size:13.5px;font-weight:600;letter-spacing:-.012em}
 .tr-meta{font-size:10.5px;color:var(--tx-3);margin-top:2px;font-variant-numeric:tabular-nums}
-.tr-fit{font-size:10.5px;color:var(--tx-3);padding:0 20px 8px;margin-top:-7px;display:flex;gap:8px;align-items:center}
-.tr-fit .i{width:12px;height:12px;color:var(--tx-4)}
+.tr-fit{font-size:10.5px;color:var(--tx-3);padding:0 20px 10px;margin-top:-4px;display:flex;gap:9px;align-items:flex-start;flex-wrap:wrap}
+.tr-fit .i{width:12px;height:12px;color:var(--tx-4);margin-top:2px;flex:0 0 auto}
+.tr-fit-txt{flex:1 1 240px;min-width:0;line-height:1.55}
 .tr-hook{display:flex;gap:8px;align-items:flex-start;font-size:11.5px;line-height:1.5;color:var(--tx-2);padding:9px 20px 12px;margin:0 0 0;border-bottom:1px solid var(--line);background:linear-gradient(90deg,var(--brand-bg),transparent 70%)}
 .tr-hook .i{color:var(--brand-lift);margin-top:1px;flex:0 0 auto}
 .tr-hook b{color:var(--tx);font-weight:600}
@@ -576,6 +577,34 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 .lead-sources{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto}
 .lead-sources a{font-size:9.5px;color:var(--tx-3);text-decoration:none;border:1px solid var(--line-2);padding:2px 6px;border-radius:4px}
 .lead-sources a:hover{color:var(--brand-lift);border-color:var(--brand)}
+/* cada lead numa caixa propria + botao da ficha do CNPJ */
+.lead-box{background:var(--bg-2);border:1px solid var(--line);border-radius:12px;margin:0 0 10px;overflow:hidden;transition:border-color .16s var(--ease)}
+.lead-box:hover{border-color:var(--line-2)}
+.lead-box .tr{border-bottom:none;padding-bottom:8px}
+.lead-box .tr-hook{border-bottom:none}
+.lead-info-btn{flex:0 0 auto;margin-left:auto;font-size:10px;font-weight:600;color:var(--brand-lift);background:rgba(10,132,255,.1);border:1px solid var(--brand-line);border-radius:980px;padding:4px 12px;cursor:pointer;white-space:nowrap;transition:background .18s var(--ease),color .18s var(--ease),border-color .18s var(--ease)}
+.lead-info-btn:hover{background:var(--brand);color:#fff;border-color:var(--brand)}
+/* balao com a ficha completa do CNPJ */
+.leadinfo-ov{position:fixed;inset:0;z-index:220;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(8,9,12,.62);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);animation:appOvIn .3s var(--ease)}
+.leadinfo-card{position:relative;width:100%;max-width:560px;max-height:86vh;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:30px 28px;box-shadow:var(--e3);animation:appCardIn .45s var(--ease)}
+.leadinfo-card h3{font-size:19px;font-weight:600;letter-spacing:-.02em;color:var(--tx);margin:0 40px 2px 0}
+.leadinfo-sub{font-size:12px;color:var(--tx-3);margin:0 0 20px}
+.li-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px 18px}
+.li-item{min-width:0}
+.li-item.full{grid-column:1/-1}
+.li-k{font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--tx-4);margin-bottom:3px}
+.li-v{font-size:13px;color:var(--tx);line-height:1.45;word-break:break-word}
+.li-v a{color:var(--brand-lift);text-decoration:none}
+.li-v a:hover{text-decoration:underline}
+.li-sources{margin-top:22px;background:var(--brand-bg);border:1px solid var(--brand-line);border-radius:14px;padding:15px 16px}
+.li-sources h4{font-size:12px;font-weight:600;color:var(--tx);margin:0 0 11px;letter-spacing:-.01em}
+.li-chips{display:flex;flex-wrap:wrap;gap:7px}
+.li-chip{font-size:11px;color:var(--tx-3);background:rgba(255,255,255,.04);border:1px solid var(--line-2);border-radius:980px;padding:5px 11px}
+.li-chip.on{color:#fff;background:var(--brand);border-color:var(--brand)}
+.li-note{font-size:10.5px;color:var(--tx-4);margin:11px 0 0;line-height:1.55}
+.leadinfo-x{position:absolute;top:14px;right:16px;width:34px;height:34px;background:none;border:none;color:var(--tx-3);font-size:26px;line-height:1;cursor:pointer;border-radius:9px;transition:background .2s var(--ease),color .2s var(--ease)}
+.leadinfo-x:hover{color:var(--tx);background:var(--panel-2)}
+@media(max-width:560px){.li-grid{grid-template-columns:1fr}}
 .lead-kebab{
   width:30px;height:30px;border-radius:8px;display:inline-grid;place-items:center;
   color:var(--tx-3);border:1px solid transparent;
@@ -1402,6 +1431,9 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
     <div class="co-step" id="co-done"></div>
   </div>
 </div>
+
+<!-- balao com a ficha completa do CNPJ de um lead -->
+<div class="leadinfo-ov" id="leadinfo-ov"><div class="leadinfo-card" id="leadinfo-card"></div></div>
 
 <!-- ==================== APP ==================== -->
 <div id="app">
@@ -3355,18 +3387,84 @@ function paintLeads(niche){
   }
   t.innerHTML = `<div class="tr th"><span>Empresa</span><span>Contato público</span><span>Score</span><span></span></div>` +
     list.map(l => `
+    <div class="lead-box">
     <div class="tr">
       <div><div class="tr-name">${esc(l.name)}</div><div class="tr-meta">${esc([l.city&&l.state?l.city+' · '+l.state:l.city||l.state,l.cnpj?'CNPJ '+l.cnpj:null,l.company_size].filter(Boolean).join(' · ') || l.meta || '')}</div></div>
       <div class="lead-contact">${l.phone?`<a href="tel:${esc(String(l.phone).replace(/[^+\d]/g,''))}">${esc(l.phone)}</a>`:'<span>telefone não confirmado</span>'}${l.email?`<a href="mailto:${esc(l.email)}">${esc(l.email)}</a>`:'<span>e-mail não confirmado</span>'}</div>
       <div><span class="num" style="font-size:13px">${Number(l.score)||0}</span><div class="spark"><span style="width:${Number(l.score)||0}%"></span></div></div>
       <div style="text-align:right"><button class="lead-kebab" data-lead-menu="${l.id}" title="Ações do lead" aria-label="Ações do lead">${ico('more','i i-sm')}</button></div>
     </div>
-    <div class="tr-fit">${ico('dot','i')}<span>${esc([l.evidence_level,l.purchase_signal||l.need_note,l.fit_note].filter(Boolean).join(' · '))}</span><span class="lead-sources">${(Array.isArray(l.source_urls)?l.source_urls:[]).slice(0,4).map((s,i)=>{const href=safeHref(typeof s==='string'?s:s?.url);return href?`<a href="${esc(href)}" target="_blank" rel="noopener noreferrer">fonte ${i+1}</a>`:''}).join('')}</span></div>
-    ${l.campaign_hook?`<div class="tr-hook"><svg class="i i-sm"><use href="#ic-send"/></svg><span><b>Gancho:</b> ${esc(l.campaign_hook)}</span></div>`:''}`).join('');
+    <div class="tr-fit">${ico('dot','i')}<span class="tr-fit-txt">${esc([l.evidence_level,l.purchase_signal||l.need_note,l.fit_note].filter(Boolean).join(' · '))}</span><button class="lead-info-btn" data-lead-info="${l.id}">Ficha do CNPJ</button></div>
+    ${l.campaign_hook?`<div class="tr-hook"><svg class="i i-sm"><use href="#ic-send"/></svg><span><b>Gancho:</b> ${esc(l.campaign_hook)}</span></div>`:''}
+    </div>`).join('');
 
   document.querySelectorAll('[data-lead-menu]').forEach(m =>
     m.addEventListener('click', e => { e.stopPropagation(); openLeadMenu(m); }));
+  document.querySelectorAll('[data-lead-info]').forEach(b =>
+    b.addEventListener('click', e => { e.stopPropagation(); openLeadInfo(b.dataset.leadInfo); }));
 }
+
+/* ===== Ficha completa do CNPJ (balao, sem sair da Velu) ===== */
+function fmtCnpj(c){ c = String(c||'').replace(/\D/g,''); return c.length===14 ? c.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,'$1.$2.$3/$4-$5') : (c||'—'); }
+function fmtCep(c){ c = String(c||'').replace(/\D/g,''); return c.length===8 ? c.replace(/^(\d{5})(\d{3})$/,'$1-$2') : (c||null); }
+function fmtCapital(v){ const n = Number(String(v==null?'':v).replace(/[^\d]/g,'')); return n ? 'R$ ' + n.toLocaleString('pt-BR') : null; }
+
+function openLeadInfo(id){
+  const l = S.leads.find(x => x.id === id);
+  if(!l) return;
+  const rows = [];
+  const add = (k, v, full) => { if(v) rows.push(`<div class="li-item${full?' full':''}"><div class="li-k">${k}</div><div class="li-v">${v}</div></div>`); };
+  add('Razão social', esc(l.legal_name || l.name), true);
+  if(l.name && l.legal_name && l.name !== l.legal_name) add('Nome fantasia', esc(l.name), true);
+  add('CNPJ', esc(fmtCnpj(l.cnpj)));
+  add('Porte', esc(l.company_size));
+  add('Atividade principal', esc(l.segment || l.cnae_main || String(l.need_note||'').replace(/^Atividade principal:\s*/i,'') || ''), true);
+  add('Capital social', esc(fmtCapital(l.capital_social)));
+  add('Cidade / UF', esc([l.city, l.state].filter(Boolean).join(' / ')));
+  add('CEP', esc(fmtCep(l.postal_code)));
+  add('Endereço', esc(l.address), true);
+  const dec = String(l.fit_note||'').replace(/^Decisor\s+prov[aá]vel:\s*/i,'').trim();
+  add('Decisor / sócio', esc(dec), true);
+  add('Telefone', l.phone ? `<a href="tel:${esc(String(l.phone).replace(/[^+\d]/g,''))}">${esc(l.phone)}</a>` : null);
+  add('WhatsApp', l.whatsapp ? esc(l.whatsapp) : null);
+  add('E-mail', l.email ? `<a href="mailto:${esc(l.email)}">${esc(l.email)}</a>` : null);
+  const site = safeHref(l.website);
+  add('Site', site ? `<a href="${esc(site)}" target="_blank" rel="noopener noreferrer">${esc(l.website)}</a>` : null);
+  const sinais = [l.evidence_level, l.purchase_signal, l.need_reason].filter(Boolean).join(' · ');
+  add('Sinais', esc(sinais), true);
+  add('Score', `${Number(l.score)||0}/100${l.confidence_score?` · confiança ${l.confidence_score}%`:''}`);
+
+  /* card de fontes: destaca as usadas neste lead */
+  const ALL = ['Receita Federal','Data Center Velu','Dados gov','Web','Site / blog','Base privada de CNPJ'];
+  const used = new Set(['Data Center Velu']);
+  const scan = txt => {
+    const t = String(txt||'').toLowerCase();
+    if(/receita|registro/.test(t)) used.add('Receita Federal');
+    if(/\bgov\b|governo/.test(t)) used.add('Dados gov');
+    if(/site|blog/.test(t)) used.add('Site / blog');
+    if(/privad/.test(t)) used.add('Base privada de CNPJ');
+    if(/\bweb\b/.test(t)) used.add('Web');
+  };
+  (Array.isArray(l.source_urls)?l.source_urls:[]).forEach(s => scan((s&&s.kind)+' '+(s&&s.title)));
+  (Array.isArray(l.source_kinds)?l.source_kinds:[]).forEach(scan);
+  const chips = ALL.map(s => `<span class="li-chip${used.has(s)?' on':''}">${s}</span>`).join('');
+
+  $('#leadinfo-card').innerHTML = `
+    <button class="leadinfo-x" id="leadinfo-x" aria-label="Fechar">&times;</button>
+    <h3>${esc(l.name || l.legal_name || 'Lead')}</h3>
+    <p class="leadinfo-sub">Ficha pública do CNPJ, direto na Velu</p>
+    <div class="li-grid">${rows.join('')}</div>
+    <div class="li-sources">
+      <h4>Fontes</h4>
+      <div class="li-chips">${chips}</div>
+      <p class="li-note">Em azul, as fontes usadas neste lead. A Velu cruza dados públicos do CNPJ (Receita Federal) no seu Data Center. Faturamento não consta na base pública.</p>
+    </div>`;
+  $('#leadinfo-x').addEventListener('click', closeLeadInfo);
+  $('#leadinfo-ov').style.display = 'flex';
+}
+function closeLeadInfo(){ const o = $('#leadinfo-ov'); if(o) o.style.display = 'none'; }
+$('#leadinfo-ov')?.addEventListener('click', e => { if(e.target === $('#leadinfo-ov')) closeLeadInfo(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeLeadInfo(); });
 
 function leadPrep(l){
   ask(`Me prepare para falar com a ${l.name}. CNPJ: ${l.cnpj||'não confirmado'}. Local: ${[l.city,l.state].filter(Boolean).join('/')||l.region||'não confirmado'}. Contato público: ${[l.phone,l.email,l.website].filter(Boolean).join(' · ')||'não confirmado'}. Evidência: ${l.purchase_signal||l.evidence_level||'frota provável'}. Necessidade provável: ${l.need_note||l.fit_note||'analisar'}. Gancho de abordagem sugerido: ${l.campaign_hook||'proponha um'}. Está na etapa ${l.stage} do pipeline. Diferencie fatos de hipóteses e use as fontes cadastradas.`);
