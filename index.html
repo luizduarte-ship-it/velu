@@ -1144,6 +1144,22 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 #login .remember input{accent-color:var(--al-accent)}
 #login .login-err{color:var(--al-red);background:rgba(255,69,58,.12);border-color:rgba(255,69,58,.32)}
 
+/* botao "O que e a Velu" e o modal com fundo borrado */
+.whatis-btn{margin-top:20px;display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);border:1px solid var(--al-line);color:var(--al-text);font-family:inherit;font-size:13.5px;font-weight:500;padding:10px 18px;border-radius:980px;cursor:pointer;transition:background .2s var(--al-ease),border-color .2s var(--al-ease),transform .2s var(--al-ease)}
+.whatis-btn:hover{background:rgba(255,255,255,.11);border-color:var(--al-text3);transform:translateY(-1px)}
+.whatis-btn span{color:var(--al-accent);transition:transform .2s var(--al-ease)}
+.whatis-btn:hover span{transform:translateX(3px)}
+.whatis-ov{position:fixed;inset:0;z-index:150;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:whatisOv .3s var(--al-ease)}
+.whatis-card{position:relative;width:100%;max-width:520px;background:var(--al-panel);border:1px solid var(--al-line2);border-radius:22px;padding:40px 34px 34px;box-shadow:0 30px 90px rgba(0,0,0,.6);animation:whatisCard .45s var(--al-ease)}
+.whatis-card .whatis-title{color:var(--al-text);font-size:24px;font-weight:600;letter-spacing:-.02em;margin:0 0 18px;max-width:none;text-shadow:none}
+.whatis-card p{color:var(--al-text2);font-size:15px;line-height:1.62;margin:0 0 14px}
+.whatis-card p:last-child{margin-bottom:0}
+.whatis-x{position:absolute;top:14px;right:16px;width:34px;height:34px;background:none;border:none;color:var(--al-text3);font-size:26px;line-height:1;cursor:pointer;border-radius:9px;transition:background .2s var(--al-ease),color .2s var(--al-ease)}
+.whatis-x:hover{color:var(--al-text);background:rgba(255,255,255,.08)}
+@keyframes whatisOv{from{opacity:0}to{opacity:1}}
+@keyframes whatisCard{from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.whatis-ov,.whatis-card{animation:none}}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://sdk.mercadopago.com/js/v2"></script>
@@ -1202,6 +1218,7 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
     <div>
       <h2 class="display">A inteligência comercial<br><span class="acc">da sua empresa.</span></h2>
       <p class="lead">CRM com inteligência artificial que acha seus clientes, organiza suas vendas e responde por você. Assine em minutos, com cartão, Pix ou boleto.</p>
+      <button class="whatis-btn" id="whatis-open" type="button">O que é a Velu <span aria-hidden="true">›</span></button>
       <div class="login-tick"><i></i> Rede ativa</div>
     </div>
 
@@ -1277,6 +1294,16 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
       <p style="font-size:11.5px;color:var(--tx-3);margin-top:16px;line-height:1.65">
         Esqueceu a senha? Fale com seu contato na Velu.
       </p>
+    </div>
+  </div>
+
+  <!-- modal "O que é a Velu" -->
+  <div class="whatis-ov" id="whatis-ov">
+    <div class="whatis-card">
+      <button class="whatis-x" id="whatis-close" aria-label="Fechar">&times;</button>
+      <h2 class="whatis-title">O que é a Velu</h2>
+      <p>A Velu junta CRM e inteligência artificial num lugar só. Ela conhece a sua empresa, acha clientes na base pública de CNPJ, organiza o pipeline e responde como alguém de dentro do seu time. Feita para pequenas e médias empresas venderem mais sem precisar contratar mais gente.</p>
+      <p>Ela nasceu de uma ideia simples: a maioria das empresas perde venda não por falta de esforço, e sim por falta de organização e da informação certa na hora certa. A Velu resolve isso reunindo prospecção, atendimento e gestão comercial num só assistente, que trabalha com o seu contexto o dia inteiro.</p>
     </div>
   </div>
 </div>
@@ -2499,6 +2526,14 @@ $('#u').addEventListener('input', () => $('#err').style.display = 'none');
 const showSignin = v => { $('#signin-panel').style.display = v ? '' : 'none'; $('#sales-panel').style.display = v ? 'none' : ''; };
 $('#to-signin')?.addEventListener('click', () => { showSignin(true); $('#u').focus(); });
 $('#to-sales')?.addEventListener('click', () => showSignin(false));
+
+/* modal "O que é a Velu" (abre com animação, fecha no X, no clique fora e no Esc) */
+const whatisOv = $('#whatis-ov');
+const showWhatis = v => { if(whatisOv) whatisOv.style.display = v ? 'flex' : 'none'; };
+$('#whatis-open')?.addEventListener('click', () => showWhatis(true));
+$('#whatis-close')?.addEventListener('click', () => showWhatis(false));
+whatisOv?.addEventListener('click', e => { if(e.target === whatisOv) showWhatis(false); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && whatisOv && whatisOv.style.display === 'flex') showWhatis(false); });
 document.querySelectorAll('.plan-buy').forEach(b => b.addEventListener('click', () => openCheckout(b.dataset.plan)));
 $('#logout').addEventListener('click', async () => {
   await SB.auth.signOut();
