@@ -3599,6 +3599,15 @@ async function suggestPrice(l){
 /* ---------- buscador de leads: sai coletando de verdade ---------- */
 const LEAD_FN = 'https://hjtdkfrlogktvmkeauwf.supabase.co/functions/v1/find-leads';
 
+/* traduz erros técnicos da busca em mensagens claras pro usuário */
+function friendlyLeadError(msg){
+  const m = String(msg || '');
+  if(/not enough credits|"?remaining"?:\s*-|\bcnpja\b.*\b429\b|\b429\b.*cnpja|sem cr[ée]dito/i.test(m))
+    return 'A base pública de CNPJ (CNPJa) está sem créditos no momento, por isso a busca parou. Recarregue o saldo no painel da CNPJa para voltar a puxar leads. Os leads já coletados continuam salvos.';
+  if(/sess[aã]o expir/i.test(m)) return 'Sua sessão expirou. Entre novamente.';
+  return m;
+}
+
 function paintLeadAutomation(){
   // A busca automatica foi removida (evita gasto de credito). Mantemos so o
   // pre-preenchimento do nicho/regiao caso exista alguma configuracao antiga.
@@ -3713,7 +3722,8 @@ async function findLeads(){
     paintNiches(); paintLeadAutomation(); paintIdentity();
     toast(leadAbort ? `Busca interrompida com ${total} leads.` : `${total} leads de "${niche}".`);
   }catch(e){
-    plabel.textContent = e.message; toast(e.message, true);
+    const fm = friendlyLeadError(e.message);
+    plabel.textContent = fm; toast(fm, true);
   }finally{
     btn.disabled = false; btn.innerHTML = original;
   }
