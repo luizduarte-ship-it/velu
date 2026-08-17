@@ -247,9 +247,12 @@ textarea.field{height:auto;min-height:84px;padding:9px 11px;resize:vertical;line
 .sales-foot a,.back-link{color:var(--brand-lift);font-weight:600;cursor:pointer;text-decoration:none}
 .back-link{display:inline-block;font-size:12px;margin-bottom:14px}
 /* --- onboarding (primeiro acesso) --- */
-#onboard,#renew-gate,#checkout{position:fixed;inset:0;z-index:200;background:var(--void);display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto}
+#onboard,#renew-gate,#checkout{position:fixed;inset:0;z-index:200;background:rgba(8,9,12,.62);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto;animation:appOvIn .32s var(--ease)}
 #checkout{z-index:210}
-.ob-card{width:100%;max-width:460px;background:var(--bg-2);border:1px solid var(--line);border-radius:16px;padding:34px 30px;box-shadow:var(--e2);margin:auto}
+@keyframes appOvIn{from{opacity:0}to{opacity:1}}
+@keyframes appCardIn{from{opacity:0;transform:translateY(18px) scale(.965)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){#onboard,#renew-gate,#checkout,.ob-card{animation:none}}
+.ob-card{width:100%;max-width:460px;background:var(--bg-2);border:1px solid var(--line);border-radius:16px;padding:34px 30px;box-shadow:var(--e3);margin:auto;animation:appCardIn .45s var(--ease)}
 .ob-step{display:none}
 .ob-step.on{display:block}
 .co-card{position:relative;max-width:440px}
