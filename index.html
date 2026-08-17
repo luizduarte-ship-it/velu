@@ -19,27 +19,27 @@
    ============================================================ */
 :root{
   /* superfícies – grafite profundo com sangue navy */
-  --bg:#191B20;
-  --bg-2:#1E2127;
-  --panel:#22252C;
-  --panel-2:#292D36;
-  --void:#0d0e11;          /* o mais fundo: poços, campos (Apple dark neutro) */
-  --rail-bg:#121419;       /* barra lateral: grafite quase preto, undertone navy */
-  --rail-bg-2:#1C1F26;     /* hover/seção da sidebar */
-  --rail-tx:#E4E8F0;       /* texto da sidebar: claro, alta leitura */
-  --rail-tx-2:#7B8494;     /* texto secundário da sidebar */
-  --rail-line:#20232B;     /* traços na sidebar */
-  --rail-active:#116CFE;   /* item ativo */
-  --void-2:#17181c;
-  /* traços */
-  --line:#2C3039;
-  --line-2:#383D47;
-  --line-3:#4C5261;
-  /* texto – creme e navy claro. Nenhum cinza. */
+  --bg:#000;               /* canvas do app: preto puro, igual ao login */
+  --bg-2:#141416;
+  --panel:#1c1c1e;         /* cards (Apple dark neutro) */
+  --panel-2:#2c2c2e;
+  --void:#0a0a0b;          /* o mais fundo: poços, campos */
+  --rail-bg:#050506;       /* barra lateral: quase preto */
+  --rail-bg-2:#1c1c1e;     /* hover/seção da sidebar */
+  --rail-tx:#f5f5f7;       /* texto da sidebar */
+  --rail-tx-2:#8e8e93;     /* texto secundário da sidebar */
+  --rail-line:#1f1f22;     /* traços na sidebar */
+  --rail-active:#0A84FF;   /* item ativo */
+  --void-2:#141416;
+  /* traços (cinza neutro Apple) */
+  --line:#2c2c2e;
+  --line-2:#3a3a3c;
+  --line-3:#48484a;
+  /* texto – neutro Apple */
   --tx:#f5f5f7;
-  --tx-2:#C4CDDB;
-  --tx-3:#98A3B5;
-  --tx-4:#6E7A8E;
+  --tx-2:#c7c7cc;
+  --tx-3:#98989d;
+  --tx-4:#636366;
   /* marca */
   --navy:#0A2A5E;
   --navy-2:#1B3F7A;
@@ -2614,15 +2614,15 @@ async function mountBrick(email){
           style: {
             theme: 'dark',
             customVariables: {
-              baseColor: '#116CFE',
-              baseColorFirstVariant: '#4E8CFF',
-              baseColorSecondVariant: '#0F1E36',
-              formBackgroundColor: '#1E2127',
-              inputBackgroundColor: '#0B1524',
-              textPrimaryColor: '#F4F3EF',
-              textSecondaryColor: '#C4CDDB',
-              outlinePrimaryColor: '#2C3039',
-              outlineSecondaryColor: '#2C3039',
+              baseColor: '#0A84FF',
+              baseColorFirstVariant: '#409CFF',
+              baseColorSecondVariant: '#10233f',
+              formBackgroundColor: '#1c1c1e',
+              inputBackgroundColor: '#0a0a0b',
+              textPrimaryColor: '#f5f5f7',
+              textSecondaryColor: '#c7c7cc',
+              outlinePrimaryColor: '#3a3a3c',
+              outlineSecondaryColor: '#2c2c2e',
               buttonTextColor: '#FFFFFF',
               successColor: '#3FB77E',
               errorColor: '#E5484D',
