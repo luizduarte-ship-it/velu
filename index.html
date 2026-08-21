@@ -2885,6 +2885,9 @@ function initAdmin(){
     $('#'+id)?.addEventListener('input', renderAdmin);
   });
   $('#adm-refresh')?.addEventListener('click', loadAdminStats);
+  // recarrega ao abrir o painel e auto-atualiza a cada 30s enquanto ele estiver aberto
+  document.querySelector('[data-view="admin"]')?.addEventListener('click', () => setTimeout(loadAdminStats, 60));
+  setInterval(() => { if($('#v-admin')?.classList.contains('on')) loadAdminStats(); }, 30000);
   loadAdminStats();
 }
 async function loadAdminStats(){
