@@ -743,6 +743,12 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 .adm-price-wrap input{width:92px}
 .adm-conv{font-size:11.5px;color:var(--brand-lift);font-weight:600;margin:2px 0 4px;text-align:right}
 .adm-fx-live{font-size:10px;color:var(--tx-4);font-weight:500}
+.adm-field input[type=number]{-moz-appearance:textfield;appearance:textfield}
+.adm-field input[type=number]::-webkit-outer-spin-button,
+.adm-field input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.adm-field input[readonly]{color:var(--tx-2);cursor:default;opacity:.9}
+.adm-field input[readonly]:hover{border-color:var(--line-2)}
+.adm-field input[readonly]:focus{border-color:var(--line-2);box-shadow:none}
 .adm-table{width:100%;border-collapse:collapse;font-size:13px}
 .adm-table td{padding:9px 0;border-bottom:1px solid var(--line);color:var(--tx-2)}
 .adm-table td:last-child{text-align:right;color:var(--tx);font-variant-numeric:tabular-nums;font-weight:600}
@@ -1959,16 +1965,15 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 
         <div class="adm-cols">
           <div class="adm-box">
-            <h3>Premissas (edite à vontade)</h3>
+            <h3>Premissas do negócio</h3>
             <div class="adm-field"><label>Preço do plano (R$/mês)<br><span class="adm-sub">só sobe, e salvar aplica no site</span></label><span class="adm-price-wrap"><input type="number" id="adm-price" step="10"><button class="btn btn-sm" id="adm-price-save">Salvar</button></span></div>
-            <div class="adm-field"><label>Custo de IA por cliente (US$/mês)</label><input type="number" id="adm-ai" step="1" value="25"></div>
+            <div class="adm-field"><label>Custo de IA por cliente (US$/mês)</label><input type="number" id="adm-ai" step="1" value="25" readonly></div>
             <div class="adm-field"><label>Câmbio (R$ por US$)<br><span class="adm-fx-live" id="adm-fx-live">dólar ao vivo</span></label><input type="number" id="adm-fx" step="0.01" value="5.40" readonly></div>
             <p class="adm-conv" id="adm-conv"></p>
-            <div class="adm-field"><label>CNPJa fixo (R$/mês, negócio todo)</label><input type="number" id="adm-cnpja" step="0.01" value="139.99"></div>
-            <div class="adm-field"><label>Taxa Mercado Pago (%)</label><input type="number" id="adm-mp" step="0.1" value="4.99"></div>
-            <div class="adm-field"><label>Imposto (%)</label><input type="number" id="adm-tax" step="0.5" value="10"></div>
-            <p class="adm-note">O câmbio é o dólar ao vivo (atualiza sozinho). Taxa do Mercado Pago e imposto ficam salvos: ajuste uma vez e clique em Salvar. O custo de IA por cliente é estimativa, confira o gasto real no painel da Anthropic e ajuste aqui.</p>
-            <button class="btn btn-sm" id="adm-save-prem" style="margin-top:12px">Salvar premissas</button>
+            <div class="adm-field"><label>CNPJa fixo (R$/mês, negócio todo)</label><input type="number" id="adm-cnpja" step="0.01" value="139.99" readonly></div>
+            <div class="adm-field"><label>Taxa Mercado Pago (%)</label><input type="number" id="adm-mp" step="0.1" value="4.99" readonly></div>
+            <div class="adm-field"><label>Imposto (%)</label><input type="number" id="adm-tax" step="0.5" value="10" readonly></div>
+            <p class="adm-note">Câmbio é o dólar ao vivo (atualiza sozinho). Os demais valores ficam fixos por aqui, só o preço do plano é editável (e só para cima). Se precisar mudar taxa, imposto ou custo de IA, me avise que eu ajusto.</p>
           </div>
 
           <div class="adm-box">
@@ -2894,7 +2899,6 @@ function initAdmin(){
   });
   $('#adm-refresh')?.addEventListener('click', loadAdminStats);
   $('#adm-price-save')?.addEventListener('click', saveAdminPrice);
-  $('#adm-save-prem')?.addEventListener('click', saveAdminSettings);
   // recarrega ao abrir o painel e auto-atualiza a cada 30s enquanto ele estiver aberto
   document.querySelector('[data-view="admin"]')?.addEventListener('click', () => setTimeout(loadAdminStats, 60));
   setInterval(() => { if($('#v-admin')?.classList.contains('on')) loadAdminStats(); }, 30000);
