@@ -738,6 +738,11 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 .adm-field input{width:130px;height:34px;padding:0 10px;background:var(--void);border:1px solid var(--line-2);border-radius:var(--r);color:var(--tx);font-size:13px;text-align:right}
 .adm-field input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-glow)}
 .adm-note{font-size:11px;color:var(--tx-4);line-height:1.55;margin:12px 0 0}
+.adm-sub{font-size:10px;color:var(--tx-4);font-weight:500}
+.adm-price-wrap{display:inline-flex;gap:8px;align-items:center}
+.adm-price-wrap input{width:92px}
+.adm-conv{font-size:11.5px;color:var(--brand-lift);font-weight:600;margin:2px 0 4px;text-align:right}
+.adm-fx-live{font-size:10px;color:var(--tx-4);font-weight:500}
 .adm-table{width:100%;border-collapse:collapse;font-size:13px}
 .adm-table td{padding:9px 0;border-bottom:1px solid var(--line);color:var(--tx-2)}
 .adm-table td:last-child{text-align:right;color:var(--tx);font-variant-numeric:tabular-nums;font-weight:600}
@@ -1955,13 +1960,15 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
         <div class="adm-cols">
           <div class="adm-box">
             <h3>Premissas (edite à vontade)</h3>
-            <div class="adm-field"><label>Preço do plano (R$/mês)</label><input type="number" id="adm-price" step="10"></div>
+            <div class="adm-field"><label>Preço do plano (R$/mês)<br><span class="adm-sub">só sobe, e salvar aplica no site</span></label><span class="adm-price-wrap"><input type="number" id="adm-price" step="10"><button class="btn btn-sm" id="adm-price-save">Salvar</button></span></div>
             <div class="adm-field"><label>Custo de IA por cliente (US$/mês)</label><input type="number" id="adm-ai" step="1" value="25"></div>
-            <div class="adm-field"><label>Câmbio (R$ por US$)</label><input type="number" id="adm-fx" step="0.05" value="5.40"></div>
+            <div class="adm-field"><label>Câmbio (R$ por US$)<br><span class="adm-fx-live" id="adm-fx-live">dólar ao vivo</span></label><input type="number" id="adm-fx" step="0.01" value="5.40" readonly></div>
+            <p class="adm-conv" id="adm-conv"></p>
             <div class="adm-field"><label>CNPJa fixo (R$/mês, negócio todo)</label><input type="number" id="adm-cnpja" step="0.01" value="139.99"></div>
             <div class="adm-field"><label>Taxa Mercado Pago (%)</label><input type="number" id="adm-mp" step="0.1" value="4.99"></div>
             <div class="adm-field"><label>Imposto (%)</label><input type="number" id="adm-tax" step="0.5" value="10"></div>
-            <p class="adm-note">O custo de IA por cliente é a única estimativa: confira o gasto real no painel da Anthropic e ajuste aqui. Leads (CNPJa) é custo fixo do negócio, não por cliente.</p>
+            <p class="adm-note">O câmbio é o dólar ao vivo (atualiza sozinho). Taxa do Mercado Pago e imposto ficam salvos: ajuste uma vez e clique em Salvar. O custo de IA por cliente é estimativa, confira o gasto real no painel da Anthropic e ajuste aqui.</p>
+            <button class="btn btn-sm" id="adm-save-prem" style="margin-top:12px">Salvar premissas</button>
           </div>
 
           <div class="adm-box">
@@ -2634,6 +2641,7 @@ $('#whatis-close')?.addEventListener('click', () => showWhatis(false));
 whatisOv?.addEventListener('click', e => { if(e.target === whatisOv) showWhatis(false); });
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && whatisOv && whatisOv.style.display === 'flex') showWhatis(false); });
 document.querySelectorAll('.plan-buy').forEach(b => b.addEventListener('click', () => openCheckout(b.dataset.plan)));
+loadPlanPrice();
 $('#logout').addEventListener('click', async () => {
   await SB.auth.signOut();
   location.reload();
@@ -2885,6 +2893,8 @@ function initAdmin(){
     $('#'+id)?.addEventListener('input', renderAdmin);
   });
   $('#adm-refresh')?.addEventListener('click', loadAdminStats);
+  $('#adm-price-save')?.addEventListener('click', saveAdminPrice);
+  $('#adm-save-prem')?.addEventListener('click', saveAdminSettings);
   // recarrega ao abrir o painel e auto-atualiza a cada 30s enquanto ele estiver aberto
   document.querySelector('[data-view="admin"]')?.addEventListener('click', () => setTimeout(loadAdminStats, 60));
   setInterval(() => { if($('#v-admin')?.classList.contains('on')) loadAdminStats(); }, 30000);
@@ -2895,8 +2905,18 @@ async function loadAdminStats(){
     const { data, error } = await SB.functions.invoke('admin-stats', { body:{} });
     if(error || !data) return;               // 403/falha: painel simplesmente não abre
     S.admin = data;
-    const pi = $('#adm-price');
-    if(pi && !pi.value) pi.value = String(Math.round((data.plan_price_cents || 60000) / 100));
+    const fxEl = $('#adm-fx'), live = $('#adm-fx-live');
+    if(fxEl && data.usd_brl_live) fxEl.value = Number(data.usd_brl_live).toFixed(2);   // dólar ao vivo, sempre
+    if(live) live.textContent = data.usd_brl_live ? 'dólar ao vivo' : 'cotação indisponível';
+    if(!S._adminInit){   // premissas salvas só entram na 1ª carga, pra não apagar o que você digita
+      const pi = $('#adm-price');
+      if(pi){ const cur = Math.round((data.plan_price_cents || 60000) / 100); pi.min = String(cur); if(!pi.value || Number(pi.value) < cur) pi.value = String(cur); }
+      if(data.ai_usd != null) $('#adm-ai').value = data.ai_usd;
+      if(data.mp_fee_pct != null) $('#adm-mp').value = data.mp_fee_pct;
+      if(data.tax_pct != null) $('#adm-tax').value = data.tax_pct;
+      if(!data.usd_brl_live && fxEl && !fxEl.value) fxEl.value = '5.40';
+      S._adminInit = true;
+    }
     renderAdmin();
   }catch(e){ /* silencioso */ }
 }
@@ -2936,6 +2956,9 @@ function renderAdmin(){
   set('adm-r-per', brl(perClient));
   set('adm-r-margin', margin.toFixed(0) + '%');
 
+  const fx2 = v => v.toFixed(2).replace('.', ',');
+  set('adm-conv', `US$ 1 = R$ ${fx2(fx)}  ·  IA: US$ ${aiUsd} = ${brl(aiUsd * fx)} por cliente/mês`);
+
   const quota = 150000, usedLeads = a.leads_month || 0;
   set('adm-msgs', (a.chat_msgs_month||0).toLocaleString('pt-BR'));
   set('adm-leads', usedLeads.toLocaleString('pt-BR'));
@@ -2943,6 +2966,42 @@ function renderAdmin(){
   set('adm-quota', Math.round(usedLeads/quota*100) + '% de 150k');
   const bar = $('#adm-quota-bar'); if(bar) bar.style.width = Math.min(100, usedLeads/quota*100) + '%';
   set('adm-updated', 'Mês ' + (a.month||'') + ' · atualizado ' + new Date(a.generated_at||Date.now()).toLocaleString('pt-BR'));
+}
+async function saveAdminPrice(){
+  const reais = Math.round(parseFloat($('#adm-price')?.value) || 0);
+  const cents = reais * 100;
+  const current = S.admin?.plan_price_cents || 0;
+  if(cents < current){ toast('O preço só pode subir, não baixar.', true); $('#adm-price').value = String(Math.round(current/100)); return; }
+  if(cents === current) return toast('O preço já é esse.');
+  const ok = await uiConfirm(`Aplicar o novo preço de R$ ${reais}/mês? Ele passa a valer no site e no checkout na hora.`, { okText:'Salvar preço' });
+  if(!ok){ $('#adm-price').value = String(Math.round(current/100)); return; }
+  const { data, error } = await SB.functions.invoke('admin-set-price', { body:{ price_cents: cents } });
+  if(error || !data?.price_cents){ toast('Não consegui salvar o preço.', true); return; }
+  S.admin.plan_price_cents = data.price_cents;
+  const pi = $('#adm-price'); if(pi) pi.min = String(Math.round(data.price_cents/100));
+  toast('Preço atualizado para R$ ' + Math.round(data.price_cents/100) + '. Já vale no site.');
+  renderAdmin();
+  loadPlanPrice();
+}
+/* persiste as premissas (custo de IA, taxa MP, imposto) pra não resetar */
+async function saveAdminSettings(){
+  const body = {
+    ai_usd: parseFloat($('#adm-ai')?.value) || 25,
+    mp_fee_pct: parseFloat($('#adm-mp')?.value) || 0,
+    tax_pct: parseFloat($('#adm-tax')?.value) || 0,
+  };
+  const { data, error } = await SB.functions.invoke('admin-save-settings', { body });
+  if(error || !data?.ok){ toast('Não consegui salvar as premissas.', true); return; }
+  toast('Premissas salvas.');
+}
+/* o card de vendas puxa o preço do banco, então muda sozinho quando o admin salva */
+async function loadPlanPrice(){
+  try{
+    const { data } = await SB.from('plans').select('price_cents').eq('active', true).order('sort').limit(1).maybeSingle();
+    if(!data?.price_cents) return;
+    const reais = Math.round(data.price_cents/100).toLocaleString('pt-BR');
+    document.querySelectorAll('#sales-panel .plan-price').forEach(el => el.innerHTML = 'R$ ' + reais + '<span>/mês</span>');
+  }catch(e){}
 }
 
 function paintIdentity(){
