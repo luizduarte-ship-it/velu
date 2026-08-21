@@ -1267,41 +1267,19 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
       <h1>Escolha seu plano</h1>
       <p class="sales-sub">Comece hoje. Cartão, Pix ou boleto, e você cancela quando quiser.</p>
       <div class="plans">
-        <div class="plan">
-          <div class="plan-top"><span class="plan-name">Essencial</span><span class="plan-tag">pra experimentar</span></div>
-          <div class="plan-price">R$ 147<span>/mês</span></div>
-          <ul class="plan-feats">
-            <li class="ok">Chat IA (Empresa e Livre)</li>
-            <li class="ok">Memória, skills e prompts</li>
-            <li class="no">Busca de leads</li>
-            <li class="no">Pipeline e dossiês</li>
-            <li class="lim">Limite de 30 mensagens por dia</li>
-          </ul>
-          <button class="btn btn-ghost plan-buy" data-plan="essencial">Assinar Essencial</button>
-        </div>
         <div class="plan hot">
-          <span class="plan-badge">Mais vendido</span>
-          <div class="plan-top"><span class="plan-name">Pro</span><span class="plan-tag">melhor valor</span></div>
-          <div class="plan-price">R$ 297<span>/mês</span></div>
+          <span class="plan-badge">Plano único</span>
+          <div class="plan-top"><span class="plan-name">Velu</span><span class="plan-tag">tudo incluído</span></div>
+          <div class="plan-price">R$ 397<span>/mês</span></div>
           <ul class="plan-feats">
-            <li class="ok">Tudo do Essencial</li>
+            <li class="ok">Chat IA (Empresa, Livre e Code)</li>
+            <li class="ok">Memória, skills e biblioteca de prompts</li>
             <li class="ok"><b>Busca de leads (base pública de CNPJ)</b></li>
-            <li class="ok">Pipeline e dossiês de concorrentes</li>
-            <li class="ok">Sugestão de preço e criador de imagem</li>
-            <li class="lim">200 mensagens por dia</li>
+            <li class="ok">Pipeline, tarefas e dossiês de concorrentes</li>
+            <li class="ok">Sugestão de preço, criador de imagem e vídeo</li>
+            <li class="lim">100 mensagens de IA por dia</li>
           </ul>
-          <button class="btn plan-buy" data-plan="pro">Assinar Pro</button>
-        </div>
-        <div class="plan">
-          <div class="plan-top"><span class="plan-name">Premium</span><span class="plan-tag">operação completa</span></div>
-          <div class="plan-price">R$ 450<span>/mês</span></div>
-          <ul class="plan-feats">
-            <li class="ok">Tudo do Pro</li>
-            <li class="ok">Editor de vídeo e apresentações</li>
-            <li class="ok">Velu Code</li>
-            <li class="ok">Limites altos e suporte prioritário</li>
-          </ul>
-          <button class="btn btn-ghost plan-buy" data-plan="premium">Assinar Premium</button>
+          <button class="btn plan-buy" data-plan="pro">Assinar a Velu</button>
         </div>
       </div>
       <p class="sales-foot">Já tem conta? <a id="to-signin">Entrar</a></p>
@@ -2611,7 +2589,7 @@ async function openCheckout(planSlug, opts = {}){
   coPlan = planSlug;
   coLockEmail = !!opts.lockEmail;
   coRenew = !!opts.lockEmail;
-  $('#co-title').textContent = 'Plano Velu ' + (PLAN_LABELS[planSlug] || '');
+  $('#co-title').textContent = 'Assinatura Velu';
   $('#co-price').textContent = 'carregando valor…';
   $('#co-email').value = opts.email || '';
   $('#co-email').readOnly = coLockEmail;
