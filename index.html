@@ -1629,8 +1629,8 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
           <div class="attach-tray" id="lead-pending-files" aria-live="polite"></div>
           <div class="lead-options">
             <label class="lead-goal">meta
-              <input type="range" id="lead-goal" min="100" max="400" step="10" value="200">
-              <b id="lead-goal-val" class="num" style="color:var(--tx);min-width:30px;text-align:right">200</b>
+              <input type="range" id="lead-goal" min="100" max="200" step="10" value="150">
+              <b id="lead-goal-val" class="num" style="color:var(--tx);min-width:30px;text-align:right">150</b>
             </label>
             <button class="btn btn-ghost btn-sm" id="lead-recommend"><svg class="i i-sm"><use href="#ic-sparkles"/></svg>Recomendar</button>
             <span id="lead-reco-note" style="font-size:11px;color:var(--tx-3);flex:1;min-width:100px;line-height:1.4"></span>
@@ -3648,7 +3648,7 @@ async function recommendLeads(){
     if(!session) throw new Error('Sessão expirada.');
     const out = await callLeadFn(session,{ recommend:true, niche, region:$('#uf').value.trim()||leadScopeLabel(), scope:$('#lead-scope').value, states:leadStatesToSend() });
     if(out.error && !out.recommended) throw new Error(out.error);
-    const rec = Math.max(100, Math.min(400, Math.round((out.recommended||200)/10)*10));
+    const rec = Math.max(100, Math.min(200, Math.round((out.recommended||150)/10)*10));
     $('#lead-goal').value = rec; $('#lead-goal-val').textContent = rec;
     note.textContent = out.reason || '';
   }catch(e){ note.textContent = 'não consegui recomendar agora.'; }
@@ -3662,7 +3662,7 @@ async function findLeads(){
   const scope = $('#lead-scope').value;
   const region = $('#uf').value.trim() || leadScopeLabel();
   const states = leadStatesToSend();
-  const target = Number($('#lead-goal').value) || 200;
+  const target = Math.min(200, Number($('#lead-goal').value) || 150);
 
   const btn = $('#search'), original = btn.innerHTML;
   const prog = $('#lead-progress'), bar = $('#lead-progress-bar'), ptxt = $('#lead-progress-txt'), plabel = $('#lead-progress-label');
