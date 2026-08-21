@@ -724,6 +724,30 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 .faq summary:hover{background:var(--panel-2)}
 .faq p{margin:0;padding:2px 18px 16px;font-size:13px;color:var(--tx-2);line-height:1.6}
 @media(max-width:820px){.sp-grid{grid-template-columns:1fr}}
+/* painel financeiro (ADM) */
+.adm-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.adm-kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-card);padding:16px 18px}
+.adm-kpi.hot{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand) inset}
+.adm-k{display:block;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tx-4);margin-bottom:6px}
+.adm-kpi b{font-size:22px;font-weight:600;letter-spacing:-.02em;color:var(--tx)}
+.adm-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.adm-box{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-card);padding:20px 22px;margin-bottom:16px}
+.adm-box h3{font-size:14px;font-weight:600;color:var(--tx);margin:0 0 14px}
+.adm-field{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.adm-field label{font-size:12.5px;color:var(--tx-2)}
+.adm-field input{width:130px;height:34px;padding:0 10px;background:var(--void);border:1px solid var(--line-2);border-radius:var(--r);color:var(--tx);font-size:13px;text-align:right}
+.adm-field input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-glow)}
+.adm-note{font-size:11px;color:var(--tx-4);line-height:1.55;margin:12px 0 0}
+.adm-table{width:100%;border-collapse:collapse;font-size:13px}
+.adm-table td{padding:9px 0;border-bottom:1px solid var(--line);color:var(--tx-2)}
+.adm-table td:last-child{text-align:right;color:var(--tx);font-variant-numeric:tabular-nums;font-weight:600}
+.adm-table tr.adm-total td{border-top:2px solid var(--line-2);border-bottom:none;color:var(--tx);font-size:15px;padding-top:12px}
+.adm-table tr.adm-total td:last-child{color:var(--up)}
+.adm-usage{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.adm-usage b{font-size:18px;font-weight:600;color:var(--tx);display:block;margin-top:2px}
+.adm-bar{height:6px;background:var(--void);border-radius:6px;overflow:hidden;margin-top:6px}
+.adm-bar span{display:block;height:100%;background:var(--brand);width:0}
+@media(max-width:820px){.adm-kpis{grid-template-columns:repeat(2,1fr)}.adm-cols{grid-template-columns:1fr}.adm-usage{grid-template-columns:repeat(2,1fr)}}
 
 /* ---- Inspirações do chat (IA) ---- */
 .inspire{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
@@ -1272,7 +1296,7 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
           <div class="plan-top"><span class="plan-name">Velu</span><span class="plan-tag">tudo incluído</span></div>
           <div class="plan-price">R$ 600<span>/mês</span></div>
           <ul class="plan-feats">
-            <li class="ok">Chat IA (Empresa, Livre e Code)</li>
+            <li class="ok">Chat IA com o contexto da sua empresa</li>
             <li class="ok">Memória, skills e biblioteca de prompts</li>
             <li class="ok"><b>Busca de leads (Receita Federal)</b></li>
             <li class="ok">Pipeline, tarefas e dossiês de concorrentes</li>
@@ -1443,7 +1467,7 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 
     <button class="rail-sec" data-sec="estudio" aria-expanded="true">Estúdio<svg class="i chev"><use href="#ic-arrow-r"/></svg></button>
     <div class="rail-group" data-group="estudio">
-      <button class="nav" data-view="code"><svg class="i"><use href="#ic-code"/></svg>Velu Code</button>
+      <button class="nav" data-view="code" style="display:none"><svg class="i"><use href="#ic-code"/></svg>Velu Code</button>
       <button class="nav" data-view="image"><svg class="i"><use href="#ic-image"/></svg>Criador de imagem</button>
       <button class="nav" data-view="skills"><svg class="i"><use href="#ic-plug"/></svg>Skills<span class="nav-count" id="nc-skills"></span></button>
     </div>
@@ -1459,6 +1483,13 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
     <button class="rail-sec" data-sec="ajuda" aria-expanded="true">Ajuda<svg class="i chev"><use href="#ic-arrow-r"/></svg></button>
     <div class="rail-group" data-group="ajuda">
       <button class="nav" data-view="support"><svg class="i"><use href="#ic-quote"/></svg>Suporte</button>
+    </div>
+
+    <div id="admin-sec" style="display:none">
+      <button class="rail-sec" data-sec="admin" aria-expanded="true">Administração<svg class="i chev"><use href="#ic-arrow-r"/></svg></button>
+      <div class="rail-group" data-group="admin">
+        <button class="nav" data-view="admin"><svg class="i"><use href="#ic-briefcase"/></svg>Painel financeiro</button>
+      </div>
     </div>
     </div>
 
@@ -1484,9 +1515,8 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
       <!-- ---------- CHAT ---------- -->
       <section class="view on" id="v-chat">
         <div class="chat-hero">
-          <div class="mode-switch" role="tablist" aria-label="Modo do chat">
+          <div class="mode-switch" role="tablist" aria-label="Modo do chat" style="display:none">
             <button role="tab" data-mode="empresa" aria-pressed="true"><svg class="i"><use href="#ic-briefcase"/></svg>Empresa</button>
-            <button role="tab" data-mode="livre" aria-pressed="false"><svg class="i"><use href="#ic-globe"/></svg>Livre</button>
           </div>
           <div class="skill-bar" id="active-skills"></div>
           <div id="hero-top">
@@ -1908,6 +1938,59 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
       </section>
 
       <!-- ---------- SUPORTE ---------- -->
+      <section class="view" id="v-admin">
+        <div class="page-hd">
+          <span class="eyebrow">Administração</span>
+          <h1>Painel financeiro</h1>
+          <p class="lead">Receita, custos e lucro do negócio, calculados ao vivo. Ajuste as premissas e veja o resultado na hora.</p>
+        </div>
+
+        <div class="adm-kpis">
+          <div class="adm-kpi"><span class="adm-k">Clientes ativos</span><b id="adm-clients">–</b></div>
+          <div class="adm-kpi"><span class="adm-k">Receita mensal (MRR)</span><b id="adm-mrr">–</b></div>
+          <div class="adm-kpi"><span class="adm-k">Custo estimado / mês</span><b id="adm-cost">–</b></div>
+          <div class="adm-kpi hot"><span class="adm-k">Lucro líquido / mês</span><b id="adm-profit">–</b></div>
+        </div>
+
+        <div class="adm-cols">
+          <div class="adm-box">
+            <h3>Premissas (edite à vontade)</h3>
+            <div class="adm-field"><label>Preço do plano (R$/mês)</label><input type="number" id="adm-price" step="10"></div>
+            <div class="adm-field"><label>Custo de IA por cliente (US$/mês)</label><input type="number" id="adm-ai" step="1" value="25"></div>
+            <div class="adm-field"><label>Câmbio (R$ por US$)</label><input type="number" id="adm-fx" step="0.05" value="5.40"></div>
+            <div class="adm-field"><label>CNPJa fixo (R$/mês, negócio todo)</label><input type="number" id="adm-cnpja" step="0.01" value="139.99"></div>
+            <div class="adm-field"><label>Taxa Mercado Pago (%)</label><input type="number" id="adm-mp" step="0.1" value="4.99"></div>
+            <div class="adm-field"><label>Imposto (%)</label><input type="number" id="adm-tax" step="0.5" value="10"></div>
+            <p class="adm-note">O custo de IA por cliente é a única estimativa: confira o gasto real no painel da Anthropic e ajuste aqui. Leads (CNPJa) é custo fixo do negócio, não por cliente.</p>
+          </div>
+
+          <div class="adm-box">
+            <h3>Resultado do mês</h3>
+            <table class="adm-table">
+              <tr><td>Receita (MRR)</td><td id="adm-r-rev">–</td></tr>
+              <tr><td>(−) IA (Claude)</td><td id="adm-r-ai">–</td></tr>
+              <tr><td>(−) Leads (CNPJa, fixo)</td><td id="adm-r-cnpja">–</td></tr>
+              <tr><td>(−) Taxas Mercado Pago</td><td id="adm-r-mp">–</td></tr>
+              <tr><td>(−) Imposto</td><td id="adm-r-tax">–</td></tr>
+              <tr class="adm-total"><td>= Lucro líquido</td><td id="adm-r-profit">–</td></tr>
+              <tr><td>Lucro por cliente</td><td id="adm-r-per">–</td></tr>
+              <tr><td>Margem líquida</td><td id="adm-r-margin">–</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="adm-box">
+          <h3>Uso no mês <button class="btn btn-ghost btn-sm" id="adm-refresh" style="float:right">Atualizar</button></h3>
+          <div class="adm-usage">
+            <div><span class="adm-k">Mensagens de IA</span><b id="adm-msgs">–</b></div>
+            <div><span class="adm-k">Leads gerados (mês)</span><b id="adm-leads">–</b></div>
+            <div><span class="adm-k">Cota CNPJa (mês)</span><b id="adm-quota">–</b><div class="adm-bar"><span id="adm-quota-bar"></span></div></div>
+            <div><span class="adm-k">Leads no total</span><b id="adm-leads-total">–</b></div>
+          </div>
+          <p class="adm-note" id="adm-updated"></p>
+        </div>
+      </section>
+
       <section class="view" id="v-support">
         <div class="page-hd">
           <span class="eyebrow">Ajuda</span>
@@ -2752,7 +2835,7 @@ SB.auth.getSession().then(({ data }) => {
 /* ============================================================ CARGA ============================================================ */
 async function boot(){
   const [prof, co, rivals, prompts, projects, leads, files, team, convos, leadAutomations, leadRuns, learning, memories, sub] = await Promise.all([
-    SB.from('profiles').select('display_name, company_id').eq('id', S.user.id).maybeSingle(),
+    SB.from('profiles').select('display_name, company_id, is_admin').eq('id', S.user.id).maybeSingle(),
     SB.from('companies').select('*').maybeSingle(),
     SB.from('competitors').select('*').order('threat', { ascending:false }),
     SB.from('prompts').select('*').order('sort'),
@@ -2787,11 +2870,76 @@ async function boot(){
   document.querySelectorAll('textarea').forEach(resizeSmartInput);
   loadUsage();
   loadTasks();
+  if(S.profile.is_admin) initAdmin();
 
   /* primeira coleta acontece uma única vez; as próximas são sob demanda */
   if(!S.co.profile && (!S.co.profile_status || S.co.profile_status === 'idle'))
     setTimeout(() => refreshCompanyProfile(true), 500);
 
+}
+
+/* ===================== PAINEL FINANCEIRO (ADM) ===================== */
+function initAdmin(){
+  const sec = $('#admin-sec'); if(sec) sec.style.display = '';
+  ['adm-price','adm-ai','adm-fx','adm-cnpja','adm-mp','adm-tax'].forEach(id => {
+    $('#'+id)?.addEventListener('input', renderAdmin);
+  });
+  $('#adm-refresh')?.addEventListener('click', loadAdminStats);
+  loadAdminStats();
+}
+async function loadAdminStats(){
+  try{
+    const { data, error } = await SB.functions.invoke('admin-stats', { body:{} });
+    if(error || !data) return;               // 403/falha: painel simplesmente não abre
+    S.admin = data;
+    const pi = $('#adm-price');
+    if(pi && !pi.value) pi.value = String(Math.round((data.plan_price_cents || 60000) / 100));
+    renderAdmin();
+  }catch(e){ /* silencioso */ }
+}
+function renderAdmin(){
+  const a = S.admin; if(!a) return;
+  const num = (id, def) => { const v = parseFloat($('#'+id)?.value); return isNaN(v) ? def : v; };
+  const brl = n => 'R$ ' + Math.round(n).toLocaleString('pt-BR');
+  const price  = num('adm-price', (a.plan_price_cents||60000)/100);
+  const aiUsd  = num('adm-ai', 25);
+  const fx     = num('adm-fx', 5.4);
+  const cnpja  = num('adm-cnpja', 139.99);
+  const mpPct  = num('adm-mp', 4.99) / 100;
+  const taxPct = num('adm-tax', 10) / 100;
+  const clients = a.active_subs || a.companies || 0;
+
+  const revenue  = clients * price;
+  const aiCost   = clients * aiUsd * fx;
+  const cnpjaCost= clients > 0 ? cnpja : 0;
+  const mpCost   = revenue * mpPct;
+  const taxCost  = revenue * taxPct;
+  const totalCost= aiCost + cnpjaCost + mpCost + taxCost;
+  const profit   = revenue - totalCost;
+  const perClient= clients > 0 ? profit / clients : 0;
+  const margin   = revenue > 0 ? profit / revenue * 100 : 0;
+
+  const set = (id, v) => { const el = $('#'+id); if(el) el.textContent = v; };
+  set('adm-clients', clients);
+  set('adm-mrr', brl(revenue));
+  set('adm-cost', brl(totalCost));
+  set('adm-profit', brl(profit));
+  set('adm-r-rev', brl(revenue));
+  set('adm-r-ai', brl(aiCost));
+  set('adm-r-cnpja', brl(cnpjaCost));
+  set('adm-r-mp', brl(mpCost));
+  set('adm-r-tax', brl(taxCost));
+  set('adm-r-profit', brl(profit));
+  set('adm-r-per', brl(perClient));
+  set('adm-r-margin', margin.toFixed(0) + '%');
+
+  const quota = 150000, usedLeads = a.leads_month || 0;
+  set('adm-msgs', (a.chat_msgs_month||0).toLocaleString('pt-BR'));
+  set('adm-leads', usedLeads.toLocaleString('pt-BR'));
+  set('adm-leads-total', (a.leads_total||0).toLocaleString('pt-BR'));
+  set('adm-quota', Math.round(usedLeads/quota*100) + '% de 150k');
+  const bar = $('#adm-quota-bar'); if(bar) bar.style.width = Math.min(100, usedLeads/quota*100) + '%';
+  set('adm-updated', 'Mês ' + (a.month||'') + ' · atualizado ' + new Date(a.generated_at||Date.now()).toLocaleString('pt-BR'));
 }
 
 function paintIdentity(){
@@ -2974,7 +3122,8 @@ function reloadHistory(){
 const LABELS = { chat:['Conversa'], comp:['Comercial','Concorrentes'], dossier:['Comercial','Dossiê'], leads:['Comercial','Leads'],
   dispatch:['Comercial','Agente de disparo'], pipe:['Comercial','Pipeline'], tasks:['Comercial','Tarefas'], support:['Ajuda','Suporte'],
   decks:['Criação','Apresentações'], prompts:['Criação','Biblioteca de prompts'], proj:['Criação','Projetos'], set:['Personalizar'],
-  code:['Estúdio','Velu Code'], image:['Estúdio','Criador de imagem'], skills:['Estúdio','Skills'], video:['Criação','Velu Vídeo'] };
+  code:['Estúdio','Velu Code'], image:['Estúdio','Criador de imagem'], skills:['Estúdio','Skills'], video:['Criação','Velu Vídeo'],
+  admin:['Administração','Painel financeiro'] };
 function crumb(parts){
   $('#crumb').innerHTML = parts.map((p,i) =>
     (i ? '<span class="sep">/</span>' : '') + `<span class="${i===parts.length-1?'cur':''}">${esc(p)}</span>`).join('');
@@ -5243,19 +5392,7 @@ $('#pw-save').addEventListener('click', async () => {
 });
 
 /* ============================================================ INTEGRAÇÃO NAS TROCAS DE MODO ============================================================ */
-/* garante o botão Code sem quebrar o setMode antigo */
-(function ensureCodeButton(){
-  const bar = document.querySelector('#v-chat .mode-switch');
-  if(bar && !bar.querySelector('[data-mode="code"]')){
-    const b = document.createElement('button');
-    b.setAttribute('role','tab');
-    b.dataset.mode = 'code';
-    b.setAttribute('aria-pressed','false');
-    b.innerHTML = '<svg class="i"><use href="#ic-code"/></svg>Code';
-    bar.appendChild(b);
-    b.addEventListener('click', () => setMode('code'));
-  }
-})();
+/* modos Livre e Code removidos: só o modo Empresa fica ativo (economia). */
 
 /* estado extra */
 S.activeSkills = new Set();
