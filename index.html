@@ -3017,7 +3017,7 @@ async function loadPlanPrice(){
     const { data } = await SB.from('plans').select('price_cents').eq('active', true).order('sort').limit(1).maybeSingle();
     if(!data?.price_cents) return;
     const reais = Math.round(data.price_cents/100).toLocaleString('pt-BR');
-    document.querySelectorAll('#sales-panel .plan-price').forEach(el => el.innerHTML = 'R$ ' + reais + '<span>/mês</span>');
+    document.querySelectorAll('#sales-panel .plan-price:not(.plan-custom)').forEach(el => el.innerHTML = 'R$ ' + reais + '<span>/mês</span>');
   }catch(e){}
 }
 
