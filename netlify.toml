@@ -3,7 +3,7 @@
 # (A ofuscacao via build.js/terser foi desligada porque o npm install da Netlify
 #  travava o deploy; da para reativar via CI depois. Ver build.js.)
 [build]
-  command = "mkdir -p dist && cp index.html dist/index.html && cp _headers dist/_headers && cp robots.txt dist/robots.txt"
+  command = "mkdir -p dist && cp index.html dist/index.html && cp _headers dist/_headers && cp robots.txt dist/robots.txt && cp sitemap.xml dist/sitemap.xml && cp favicon.png dist/favicon.png && cp og.png dist/og.png"
   publish = "dist"
 
 # Consolida o www no dominio principal (evita certificado/host separado).
