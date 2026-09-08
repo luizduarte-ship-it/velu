@@ -25,7 +25,13 @@ para producao. Atualizar esta lista quando algo mudar:
 - `package.json`: declara o terser (a Netlify roda `npm install` + `node build.js`).
 - `_headers`: cabecalhos de seguranca aplicados pela Netlify (CSP, X-Frame-Options,
   nosniff, Referrer-Policy, Permissions-Policy, HSTS).
-- `robots.txt`: bloqueia crawlers (`Disallow: /`).
+- `robots.txt`: libera indexacao (`Allow: /`) e aponta o `sitemap.xml`.
+- `sitemap.xml`: mapa do site pro Google (so a home por enquanto).
+- `favicon.png`: logo "V" como arquivo real (o Google usa este; o `<head>`
+  ainda tem a mesma logo em base64 pro navegador). 128x121.
+- `og.png`: imagem de compartilhamento 1200x630 (previa no WhatsApp/redes e
+  buscadores). Gerada por print de um template no Chromium; regerar por script
+  se a marca/tagline mudar. As meta tags og:/twitter no `<head>` apontam pra ela.
 - `netlify.toml`: config de deploy. Roda `node build.js` e publica `dist/` (assim
   CLAUDE.md e o resto do repo nao vao para o ar; o JS publicado vai ofuscado).
 - `dist/`: gerado no build, ignorado no git.
