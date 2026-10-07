@@ -1,4 +1,5 @@
 import { Composition } from "remotion";
+import { ReelsPrimeiraVenda, reelsDefaults, reelsSchema } from "./velu/ReelsPrimeiraVenda";
 import { VeluIntro, veluIntroDefaults, veluIntroSchema } from "./velu/VeluIntro";
 
 // Cada <Composition> vira um video renderizavel (id = nome no render).
@@ -21,6 +22,16 @@ export const RemotionRoot: React.FC = () => {
         schema={veluIntroSchema}
         defaultProps={veluIntroDefaults}
         durationInFrames={180}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+      <Composition
+        id="ReelsPrimeiraVenda"
+        component={ReelsPrimeiraVenda}
+        schema={reelsSchema}
+        defaultProps={reelsDefaults}
+        durationInFrames={900}
         fps={30}
         width={1080}
         height={1920}
