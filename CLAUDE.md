@@ -36,6 +36,14 @@ para producao. Atualizar esta lista quando algo mudar:
   CLAUDE.md e o resto do repo nao vao para o ar; o JS publicado vai ofuscado).
 - `dist/`: gerado no build, ignorado no git.
 - `CLAUDE.md`: este arquivo.
+- `video/`: projeto **Remotion** (React + TypeScript) para videos de motion da
+  marca. Independente do site: tem `package.json` proprio e **nao vai para o ar**
+  (a Netlify so copia os arquivos listados no `netlify.toml`). Ver secao Videos.
+- `.claude/skills/remotion-*`: skills oficiais do Remotion (`remotion-dev/skills`).
+  Instaladas so as sete uteis para motion (best-practices, markup, create, render,
+  studio, multimedia, captions); a arvore `remotion-maps` foi excluida por nao ter
+  uso aqui. `skills-lock.json` registra a versao de cada uma. Atualizar com
+  `npx skills update -p -y`.
 - As edge functions (Deno/TypeScript) nao ficam versionadas neste repo; vivem no
   Supabase (deploy via MCP ou `supabase functions deploy <slug>`).
 
@@ -52,6 +60,24 @@ para producao. Atualizar esta lista quando algo mudar:
   Chromium headless via Playwright (`/opt/pw-browsers/...`) apontando para
   `file:///.../index.html`, com `window.supabase` mockado (a app chama o
   Supabase no boot). Serve para conferir telas, abrir menus e diálogos.
+
+## Videos (Remotion)
+- Tudo dentro de `video/`. Primeira vez: `cd video && npm install`.
+- **Preview interativo:** `npm run dev` (abre o Remotion Studio no navegador).
+- **Exportar MP4:** `npm run render` (16:9) ou `npm run render:vertical` (9:16).
+  Saida em `video/out/` (ignorada no git).
+- Composicoes registradas em `video/src/Root.tsx`. Cada video novo vira um
+  componente em `video/src/velu/` e um `<Composition>` no Root.
+- Identidade visual centralizada em `video/src/velu/brand.ts` (cores, fontes,
+  tagline). Sempre usar esses tokens; nunca texto cinza, so navy ou azul.
+- Fontes embutidas em `video/public/fonts` (Instrument Sans 400/700, IBM Plex
+  Mono 500), carregadas com `@remotion/fonts`. Logo em `video/public/velu-logo.png`
+  (e clara: usar sobre fundo escuro ou dentro do selo navy).
+- Antes de escrever codigo Remotion, carregar a skill `remotion-best-practices`.
+  Animacoes so com `useCurrentFrame()` + `interpolate()`/`spring()`; CSS
+  transition/animation nao renderiza.
+- Licenca: Remotion e gratis para pessoa fisica e empresas de ate 3 pessoas;
+  acima disso precisa da licenca Company (remotion.pro/license).
 
 ## Arquitetura
 - **Frontend:** `index.html` unico. Estado global no objeto `S`. Navegacao troca
