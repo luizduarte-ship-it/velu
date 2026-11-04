@@ -110,6 +110,13 @@ done, due_date; RLS por company_id; view "Tarefas" na aba Comercial).
   menus de 3 pontos nos cards de Leads e do Pipeline.
 - `openModal`/`closeModal` para modais de conteudo (ex.: sugestao de preco).
 - O favicon e a logo "V" embutida em base64 no `<head>`.
+- Toda resposta da Velu no chat tem os botoes "Baixar em Word / PDF / PowerPoint"
+  (`answerActions`). Sao gerados no navegador, sem gastar IA: Word via JSZip
+  (`exportDocx`), PDF via jsPDF (`exportPdf`) e PowerPoint via pptxgenjs
+  (`exportPptx`), as duas ultimas carregadas do jsdelivr so no clique
+  (`loadScript`). `mdBlocks` quebra o markdown da resposta em titulos, bullets e
+  paragrafos; cada "## Slide N:" vira um slide. A edge function `chat` (v17+)
+  instrui a Velu a estruturar slides assim e a nunca mandar o usuario pro Canva.
 
 ## Convencoes do produto
 - Tudo em portugues do Brasil.
