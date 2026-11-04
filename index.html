@@ -879,7 +879,7 @@ table.cmp tr.you td:first-child{font-weight:700;box-shadow:inset 2px 0 0 var(--b
 .msg-files{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08)}
 .msg-file{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;color:var(--tx-2);max-width:230px}
 .msg-file .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.msg-actions{display:flex;gap:7px;margin-top:-12px}
+.msg-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:-12px}
 .msg-actions button{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;color:var(--tx-4);padding:4px 7px;border-radius:5px}
 .msg-actions button:hover{color:var(--brand-lift);background:var(--brand-bg)}
 .msg-a a{color:#76A7FF;text-decoration:underline;text-decoration-color:rgba(118,167,255,.4);text-underline-offset:2px}
@@ -3331,6 +3331,145 @@ async function exportDocx(title, messages){
   toast('Arquivo Word gerado.');
 }
 
+/* ---- PDF e PowerPoint, gerados no navegador a partir da resposta (sem gastar IA) ---- */
+const _scriptLoads = {};
+function loadScript(src){
+  if(!_scriptLoads[src]) _scriptLoads[src] = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = src; s.async = true;
+    s.onload = () => res(); s.onerror = () => { delete _scriptLoads[src]; rej(new Error('Falha ao carregar ' + src)); };
+    document.head.appendChild(s);
+  });
+  return _scriptLoads[src];
+}
+const fileSlug = t => (String(t || 'velu').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9-]+/gi,'-').replace(/^-|-$/g,'').toLowerCase()) || 'velu';
+/* tira a marcação (negrito, links, crase, molduras de caractere) e deixa só o texto */
+const plainMd = t => String(t ?? '')
+  .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '$1 ($2)')
+  .replace(/\*\*([^*]+)\*\*/g, '$1').replace(/__([^_]+)__/g, '$1')
+  .replace(/`([^`]+)`/g, '$1').replace(/[╔╗╚╝║═╠╣╦╩╬┌┐└┘│─├┤┬┴┼]/g, '').trim();
+/* quebra a resposta em blocos: h1/h2/h3, li (bullet), p, hr */
+function mdBlocks(content){
+  const out = []; let fence = false;
+  String(content ?? '').split('\n').forEach(raw => {
+    const t = raw.trim();
+    if(/^```/.test(t)){ fence = !fence; return; }
+    if(fence || !t) return;
+    if(/^[\*_]*clique em [\"“]?baixar/i.test(t)) return;   // instrucao do botao nao vai pro arquivo
+    let m;
+    if(/^(-{3,}|\*{3,}|_{3,})$/.test(t)) out.push({ t:'hr' });
+    else if((m = t.match(/^###+\s+(.*)/))) out.push({ t:'h3', text: plainMd(m[1]) });
+    else if((m = t.match(/^(#{1,2})\s+(.*)/))) out.push({ t: m[1].length === 1 ? 'h1' : 'h2', text: plainMd(m[2]).replace(/^slide\s*\d+\s*[:.\-–]\s*/i, '') });
+    else if((m = t.match(/^\**\s*slide\s*\d+\s*[:.\-–]?\s*(.*?)\**\s*$/i))) out.push({ t:'h2', text: plainMd(m[1]) || 'Slide' });
+    else if(/^\*\*[^*]{1,80}\*\*:?$/.test(t)) out.push({ t:'h3', text: plainMd(t).replace(/:$/, '') });
+    else if((m = t.match(/^(?:[-*•]|\d+[.)])\s+(.*)/))) out.push({ t:'li', text: plainMd(m[1]) });
+    else out.push({ t:'p', text: plainMd(t) });
+  });
+  return out.filter(b => b.t === 'hr' || b.text);
+}
+async function exportPdf(title, content){
+  try{ await loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js'); }
+  catch{ return toast('Não consegui carregar o gerador de PDF. Verifique a conexão.', true); }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  const W = 210, H = 297, M = 18, maxW = W - M*2; let y = M + 4;
+  const brand = [10,132,255], ink = [28,28,30], ink2 = [100,100,106];
+  const need = h => { if(y + h > H - M - 4){ doc.addPage(); y = M + 4; } };
+  const write = (text, size, style, color, indent, gapAfter) => {
+    doc.setFont('helvetica', style); doc.setFontSize(size); doc.setTextColor(color[0], color[1], color[2]);
+    const lh = size * 0.42;
+    doc.splitTextToSize(text, maxW - indent).forEach(l => { need(lh); doc.text(l, M + indent, y); y += lh; });
+    y += gapAfter;
+  };
+  doc.setFillColor(brand[0], brand[1], brand[2]); doc.rect(M, y - 3, 12, 1.4, 'F'); y += 6;
+  write(title, 20, 'bold', ink, 0, 1);
+  write('Gerado pela Velu em ' + new Date().toLocaleString('pt-BR'), 9.5, 'normal', ink2, 0, 7);
+  mdBlocks(content).forEach(b => {
+    if(b.t === 'hr'){ y += 2; need(2); doc.setDrawColor(220,220,224); doc.line(M, y, W - M, y); y += 5; }
+    else if(b.t === 'h1'){ y += 3; write(b.text, 15.5, 'bold', ink, 0, 2.5); }
+    else if(b.t === 'h2'){ y += 2.5; write(b.text, 13, 'bold', ink, 0, 2); }
+    else if(b.t === 'h3'){ y += 1.5; write(b.text, 11.2, 'bold', ink, 0, 1.5); }
+    else if(b.t === 'li'){
+      need(4.5); doc.setFont('helvetica','normal'); doc.setFontSize(10.5); doc.setTextColor(brand[0], brand[1], brand[2]);
+      doc.text('•', M + 1.5, y);
+      write(b.text, 10.5, 'normal', ink, 6, 1.6);
+    }
+    else write(b.text, 10.5, 'normal', ink, 0, 2.6);
+  });
+  const n = doc.getNumberOfPages();
+  for(let i = 1; i <= n; i++){
+    doc.setPage(i); doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(150,150,155);
+    doc.text('Velu  ·  velucrm.com', M, H - 10);
+    doc.text(i + ' / ' + n, W - M, H - 10, { align:'right' });
+  }
+  doc.save(fileSlug(title) + '.pdf');
+  toast('PDF gerado.');
+}
+/* monta os slides: cada "## título" (ou "Slide N:") vira um slide; h3 vira linha em negrito; bullets e parágrafos viram o corpo */
+function slidesFromMd(title, content){
+  const blocks = mdBlocks(content), slides = []; let cur = null;
+  const push = () => { if(cur && (cur.title || cur.lines.length)) slides.push(cur); };
+  blocks.forEach(b => {
+    if(b.t === 'hr') return;
+    if(b.t === 'h1' || b.t === 'h2'){ push(); cur = { title: b.text, lines: [] }; return; }
+    if(!cur) cur = { title: '', lines: [] };
+    cur.lines.push({ text: b.text, bold: b.t === 'h3', bullet: b.t === 'li' });
+  });
+  push();
+  const out = [];
+  slides.forEach(s => {
+    if(s.lines.length <= 7) return out.push(s);
+    for(let i = 0; i < s.lines.length; i += 7) out.push({ title: s.title + (i ? ' (cont.)' : ''), lines: s.lines.slice(i, i + 7) });
+  });
+  const firstH1 = blocks.find(b => b.t === 'h1');
+  let deckTitle = firstH1?.text || title;
+  if(firstH1 && out[0]?.title === firstH1.text && !out[0].lines.length) out.shift();
+  return { deckTitle, slides: out };
+}
+async function exportPptx(title, content){
+  try{ await loadScript('https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js'); }
+  catch{ return toast('Não consegui carregar o gerador de PowerPoint. Verifique a conexão.', true); }
+  const { deckTitle, slides } = slidesFromMd(title, content);
+  if(!slides.length) return toast('Não achei conteúdo pra montar slides nessa resposta.', true);
+  const pres = new PptxGenJS(); pres.layout = 'LAYOUT_16x9'; pres.author = 'Velu'; pres.title = deckTitle;
+  const BG = '0A0A0B', TX = 'F5F5F7', TX2 = 'C7C7CC', BR = '0A84FF', FONT = 'Calibri', total = slides.length + 1;
+  const footer = (s, i) => {
+    s.addText('velucrm.com', { x:0.6, y:5.1, w:3, h:0.3, fontFace:FONT, fontSize:9, color:'6E6E73' });
+    s.addText(i + ' / ' + total, { x:8.4, y:5.1, w:1, h:0.3, fontFace:FONT, fontSize:9, color:'6E6E73', align:'right' });
+  };
+  const cover = pres.addSlide(); cover.background = { color: BG };
+  cover.addShape(pres.ShapeType.rect, { x:0.6, y:2.0, w:0.6, h:0.07, fill:{ color: BR }, line:{ color: BR } });
+  cover.addText(deckTitle, { x:0.6, y:2.15, w:8.8, h:1.4, fontFace:FONT, fontSize:34, bold:true, color:TX, valign:'top', fit:'shrink' });
+  cover.addText('Preparado pela Velu  ·  ' + new Date().toLocaleDateString('pt-BR'), { x:0.6, y:3.6, w:8.8, h:0.4, fontFace:FONT, fontSize:13, color:TX2 });
+  footer(cover, 1);
+  slides.forEach((sl, idx) => {
+    const s = pres.addSlide(); s.background = { color: BG };
+    s.addShape(pres.ShapeType.rect, { x:0.6, y:0.55, w:0.5, h:0.06, fill:{ color: BR }, line:{ color: BR } });
+    s.addText(sl.title || 'Slide ' + (idx + 1), { x:0.6, y:0.65, w:8.8, h:0.8, fontFace:FONT, fontSize:24, bold:true, color:TX, valign:'top', fit:'shrink' });
+    const runs = sl.lines.map(l => ({ text: l.text, options: { bullet: l.bullet ? { indent: 18 } : false, bold: !!l.bold, color: l.bold ? TX : TX2, breakLine: true, paraSpaceAfter: 6 } }));
+    if(runs.length) s.addText(runs, { x:0.6, y:1.5, w:8.8, h:3.5, fontFace:FONT, fontSize:15, color:TX2, valign:'top', fit:'shrink' });
+    footer(s, idx + 2);
+  });
+  await pres.writeFile({ fileName: fileSlug(deckTitle) + '.pptx' });
+  toast('PowerPoint gerado.');
+}
+/* botões que aparecem embaixo de cada resposta da Velu */
+function answerActions(id){
+  return `<div class="msg-actions"><button data-answer-word="${id}">${ico('download','i i-sm')}Baixar em Word</button><button data-answer-pdf="${id}">${ico('download','i i-sm')}Baixar em PDF</button><button data-answer-pptx="${id}">${ico('download','i i-sm')}Baixar em PowerPoint</button><button data-answer-teach="${id}">${ico('sparkles','i i-sm')}Ensinar à Velu</button></div>`;
+}
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-answer-pdf],[data-answer-pptx]'); if(!b) return;
+  const id = b.dataset.answerPdf || b.dataset.answerPptx;
+  let content = S.answerCache.get(id);
+  if(content == null){ const { data } = await SB.from('messages').select('content').eq('id', id).maybeSingle(); content = data?.content; }
+  if(content == null) return toast('Não encontrei essa resposta.', true);
+  const first = mdBlocks(content).find(x => x.t === 'h1' || x.t === 'h2');
+  const title = first?.text || 'Resposta da Velu';
+  b.disabled = true;
+  try{ if(b.dataset.answerPdf) await exportPdf(title, content); else await exportPptx(title, content); }
+  catch(err){ console.error(err); toast('Não consegui gerar o arquivo.', true); }
+  finally{ b.disabled = false; }
+});
+
 async function convoAction(c, act){
   closePop();
   if(act === 'rename'){
@@ -4897,7 +5036,7 @@ function bubble(role, text, attachments=[], id=''){
   const files = attachments.length ? `<div class="msg-files">${attachments.map(f=>`<span class="msg-file">${ico('file','i i-sm')}<span class="name">${esc(f.name)}</span></span>`).join('')}</div>` : '';
   return role === 'user'
     ? `<div class="msg-u">${esc(text)}${files}</div>`
-    : `<div class="msg-a">${md(text)}</div>${id ? `<div class="msg-actions"><button data-answer-word="${id}">${ico('download','i i-sm')}Baixar esta resposta em Word</button><button data-answer-teach="${id}">${ico('sparkles','i i-sm')}Ensinar à Velu</button></div>` : ''}`;
+    : `<div class="msg-a">${md(text)}</div>${id ? answerActions(id) : ''}`;
 }
 /* markdown mínimo – negrito, títulos, listas, quebras. Nada de lib. */
 function md(t){
@@ -5104,7 +5243,7 @@ async function send(){
     if(!failed && acc) await finishTypewriter(live, acc);
     live.classList.remove('streaming');
     live.removeAttribute('id');
-    if(!failed && assistantId) live.insertAdjacentHTML('afterend',`<div class="msg-actions"><button data-answer-word="${assistantId}">${ico('download','i i-sm')}Baixar esta resposta em Word</button><button data-answer-teach="${assistantId}">${ico('sparkles','i i-sm')}Ensinar à Velu</button></div>`);
+    if(!failed && assistantId) live.insertAdjacentHTML('afterend', answerActions(assistantId));
     S.busy = false;
     $('.send').disabled=false; $('#attach-file').disabled=false; $('#voice-input').disabled=false;
     if(!failed&&assistantId&&S.learning?.enabled!==false) callLearning({conversation_id:S.convo},{silent:true}).catch(()=>{});
